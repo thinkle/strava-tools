@@ -1,0 +1,5 @@
+[dev]
+  command = "npm run dev"
+  functions = "functions"
+  publish = "public"
+  port = 8888 
