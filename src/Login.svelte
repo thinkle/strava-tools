@@ -2,7 +2,7 @@
     import Config from './Config.svelte';
     let clientID = 34363;
     let netlify_uri = 'NETLIFY_URL';
-    let uri = 'http://www.strava.com/oauth/authorize?client_id={clientID}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=read'
+    let loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=read`
     let authenticated = false;
 
 //$ http GET "https://www.strava.com/api/v3/athlete" "Authorization: Bearer [[token]]"
@@ -18,6 +18,7 @@
     <Config/>
     {:else}
     <p>You are NOT logged in</p>
+    <a href={loginUri}>Log in for realz</a>
     <button on:click={()=>authenticated=true}>Log in</button>
     {/if}
 </div>
