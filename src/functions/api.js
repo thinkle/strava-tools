@@ -1,5 +1,6 @@
 export async function handler (event, context) {
     let params = event.queryStringParameters;
+    let jsonBody;
     if (event.body) {
         try {
             jsonBody = JSON.parse(event.body);
