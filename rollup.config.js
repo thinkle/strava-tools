@@ -1,12 +1,13 @@
 import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import replace from 'rollup-plugin-replace';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
-
+const NETLIFY_URL = process.env.URL || 'https://localhost:8888/'
 function serve() {
 	let server;
 
@@ -38,6 +39,9 @@ export default [
 			file: 'public/build/bundle.js'
 		},
 			plugins: [
+				replace({
+					NETLIFY_URL
+				}),
 				svelte({
 					compilerOptions: {
 						// enable run-time checks when not in production
@@ -57,7 +61,7 @@ export default [
 					browser: true,
 					dedupe: ['svelte']
 				}),
-				commonjs(),
+				commonjs(),				
 
 				// In dev mode, call `npm run start` once
 				// the bundle has been generated
