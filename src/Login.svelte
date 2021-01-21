@@ -3,17 +3,54 @@
     import {token} from './stores.js';
     let clientID = 34363;
     let netlify_uri = 'NETLIFY_URL';
-    let loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=read`
+    let loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=activity:write,profile:read_all,activity:read_all`
     let loginCode = new URLSearchParams(location.search).get('code')
-    let authenticated = $token;
-    if (loginCode) {
+    let authenticated
+    console.log('TOKEN:',$token);
+
+    if ($token) {
+        if ($token.expires_at < new Date().getTime()/1000) {
+            authenticated = false;
+            console.log('Oops, expired',new Date().getTime()/1000 - $token.expires_at,'seconds ago')
+            refreshToken($token);
+        } else {
+            authenticated = true;
+        }
+    }
+
+    if (!authenticated && loginCode) {
         authenticated = 'Partial';
         console.log('Part way authenticated...');
         getToken(loginCode);
     }
     const uri = '/.netlify/functions/api'
 
-
+    async function refreshToken () {
+        console.log('Refreshing token')
+        let response = await fetch(uri,
+        {
+            method : 'POST',
+            body : JSON.stringify(
+                {   
+                    method:'refresh',
+                    token:$token
+                }
+            )
+        }
+        );
+        console.log('Got response!')
+        let jsonResponse
+        try {
+            jsonResponse = await response.json();
+        } catch (err) {
+            console.log('No json? oops!');
+            // we should delete the old $token and make them log in fresh in the future...
+        }
+        console.log('Response',jsonResponse)
+        localStorage.setItem('token',JSON.stringify(jsonResponse.token));
+        $token = jsonResponse.token; 
+        authenticated = true       
+    }
 
     async function getToken () {
         console.log('Get token...');
@@ -24,7 +61,10 @@
             )}
         );
         let jsonResponse = await response.json();
+        localStorage.setItem('token',JSON.stringify(jsonResponse.token));
         $token = jsonResponse.token;
+        history.pushState({}, null, '/');
+
     }
 //$ http GET "https://www.strava.com/api/v3/athlete" "Authorization: Bearer [[token]]"
 
@@ -36,11 +76,13 @@
     {#if authenticated}
     <p>You are logged in</p>
     <p>Wowza you got a token! {JSON.stringify($token)}</p>
-    <button on:click={()=>authenticated=false}>Log out</button>
+    <button on:click={()=>$token=undefined}>Log out</button>
     <Config/>
-    {:else}
+    {:else if !$token}
     <p>You are NOT logged in</p>
     <a href={loginUri}>Log in for realz</a>
     <button on:click={()=>authenticated=true}>Log in</button>
+    {:else}
+    Refreshing token... one second...
     {/if}
 </div>

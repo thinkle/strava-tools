@@ -5,7 +5,6 @@
 <main>
 	<h1>Strava Gear AutoFix</h1>
 	<p>This App will magically auto-correct your gear!</p>
-	<p>Awesome, wow!</p>
 	<Login/>
 </main>
 
