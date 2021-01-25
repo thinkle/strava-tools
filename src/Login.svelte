@@ -70,18 +70,14 @@
 
 </script>
 
-<div>
-    This will be a login component. {netlify_uri}
-    
+<div>    
     {#if authenticated}
-    <p>You are logged in</p>
-    <p>Wowza you got a token! {JSON.stringify($token)}</p>
+    <p>You are logged in!</p>
     <button on:click={()=>$token=undefined}>Log out</button>
     <Config/>
     {:else if !$token}
     <p>You are NOT logged in</p>
     <a href={loginUri}>Log in for realz</a>
-    <button on:click={()=>authenticated=true}>Log in</button>
     {:else}
     Refreshing token... one second...
     {/if}

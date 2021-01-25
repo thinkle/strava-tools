@@ -85,7 +85,7 @@
         {activity.average_temp.toFixed(1)}°C
     {/if}</td>
     <td>
-        {currentBike.name} {getBike(activity.gear_id).name}             
+        {currentBike.name}            
     </td>
     <td>
         {#if wrongBike}

@@ -8,8 +8,10 @@ let showMap = false;
 const token = 'MAPBOX_TOKEN'
 let coordinateData = {}
 $: {
-    coordinates = Polyline.decode(polyline);
-    coordinateData = findMetadata(coordinates)
+    if (polyline) {
+        coordinates = Polyline.decode(polyline);
+        coordinateData  = findMetadata(coordinates);
+    }
 }
 $: {
     if (mapDiv && coordinateData.clat) {
@@ -154,11 +156,12 @@ function distance(lat1, lon1, lat2, lon2, unit) {
 let canvas
 let scale
 $: {
-    if (canvas && coordinates) {
+    if (canvas && coordinates && coordinates.length) {
         console.log('Draw it baby!')
         // we should fix this to use an actual projection at some point
         // in the future... this will do for now :)
         let ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,500,500);
         let latLonFactor = 1.6
         // scaling factor...
         let height = (coordinateData.maxLat - coordinateData.minLat) * latLonFactor
@@ -176,6 +179,7 @@ $: {
             scale * (coordinates[0][1]  - coordinateData.minLon),
             500 - scale * (coordinates[0][0] - coordinateData.minLat) * latLonFactor,
             )
+        ctx.beginPath()
         ctx.strokeStyle = '#f88';
         ctx.lineWidth = 15
         for (let c of coordinates) {
