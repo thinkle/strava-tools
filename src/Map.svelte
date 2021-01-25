@@ -2,11 +2,13 @@
 import Polyline from '@mapbox/polyline';
 import MapboxGL from 'mapbox-gl';
 export let polyline
+console.log('Map from polyline:',polyline)
 let coordinates = [];
 let mapDiv;
 let showMap = false;
 const token = 'MAPBOX_TOKEN'
 let coordinateData = {}
+$: console.log('Mapdiv: ',mapDiv)
 $: {
     if (polyline) {
         coordinates = Polyline.decode(polyline);
@@ -19,7 +21,7 @@ $: {
         //console.log('polyline: ',JSON.stringify(coordinates))
         MapboxGL.accessToken = token;
         console.log('Working with data: ',coordinateData)
-        var map = new MapboxGL.Map({
+        let map = new MapboxGL.Map({
             container: mapDiv,
             style : 'mapbox://styles/tmhinkle/ckkcnw1l25c8u17nthwt1amxc',
             //style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
