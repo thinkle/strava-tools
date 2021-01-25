@@ -8,6 +8,7 @@ import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
 const NETLIFY_URL = process.env.URL || 'http://localhost:8888'
+const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
 function serve() {
 	let server;
 
@@ -40,7 +41,8 @@ export default [
 		},
 			plugins: [
 				replace({
-					NETLIFY_URL
+					NETLIFY_URL,
+					MAPBOX_TOKEN
 				}),
 				svelte({
 					compilerOptions: {

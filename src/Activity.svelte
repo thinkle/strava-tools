@@ -3,6 +3,7 @@
     export let activity
     import {token,bikeSettings} from './stores.js'
     import {pickBike} from './bikePicker.js';
+    import Map from './Map.svelte';
     let defaultBike = athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
     let showOthers = false;
 
@@ -110,8 +111,29 @@
         {/if}
     </td>
 </tr>
+<tr class='end'>
+    <td colspan='8'>
+        <div  class='map'>
+            <Map polyline={activity.map.summary_polyline}/>
+        </div>
+    </td>
+</tr>
 
 <style>
+    .end > td {
+        border-bottom: 1px solid grey;
+        padding-bottom: 10px;
+    }
+    .map {
+        display: flex;
+        text-align: left;
+    }
+    .map > :global(*:nth-child(1)) {
+        flex-shrink: 1;
+    }
+    .map > :global(*:nth-child(2)) {
+        flex-grow: 1
+    }
     .wrongBike {
         color: red;
     }
