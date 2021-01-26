@@ -21,10 +21,8 @@ export async function handler (event, context) {
         ...jsonBody
     }
     if (params.code) {
-        // get token!
-        console.log('Get token from code',params.code)
-        let token = await getToken(params.code)
-        console.log('token=',token)
+        // exchange code for token        
+        let token = await getToken(params.code)        
         return {
             statusCode : 200,
             body : JSON.stringify({
@@ -33,8 +31,7 @@ export async function handler (event, context) {
         }
     } 
     if (params.method='refresh') {
-        let token = await refreshToken(params.token);
-        console.log('new token=',token);
+        let token = await refreshToken(params.token);        
         return {
             statusCode: 200,
             body : JSON.stringify({
@@ -42,38 +39,14 @@ export async function handler (event, context) {
             })
         }
     }
-    if (params.method='getAthlete' && params.token) {
-        let athlete = await getAthlete(params.token);
-        return athlete;
-    }
-    console.log('fallback')
-    return {
-        statusCode : 200,
-        body : JSON.stringify(
-            {message:'Hello world',
-             content : 'I echo params',
-             params}
-            )
-    }
 }
+
 let netlify_uri = process.env.NETLIFY_URL;
-let loginUri = `http://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=read`
       
-async function getAthlete (token) {
-    strava.config({
-        access_token : token,
-        client_id : STRAVA_CLIENT_ID,
-        client_secret : STRAVA_CLIENT_SECRET,
-        redirect_uri :   loginUri,
-    })
-    let defaultClient = strava.ApiClient.instance;
-    let strava_oauth = defaultClient.authentications['strava_oauth'];
-    strava_oauth.accessToken = token;
-    let athlete = await api.getLoggedInAthlete();
-    return athlete;
-}
 async function refreshToken (oldToken) {
-/* curl -X POST https://www.strava.com/api/v3/oauth/token \
+/* 
+Here's the code from Strava's documentation
+curl -X POST https://www.strava.com/api/v3/oauth/token \
   -d client_id=ReplaceWithClientID \
   -d client_secret=ReplaceWithClientSecret \
   -d grant_type=refresh_token \
@@ -101,7 +74,9 @@ async function refreshToken (oldToken) {
 }
 
 async function getToken (code) {
-   /* curl -X POST https://www.strava.com/api/v3/oauth/token \
+   /* 
+   Here's the code from Strava's documentation:
+   curl -X POST https://www.strava.com/api/v3/oauth/token \
   -d client_id=ReplaceWithClientID \
   -d client_secret=ReplaceWithClientSecret \
   -d code=ReplaceWithCode \
@@ -118,9 +93,8 @@ async function getToken (code) {
             {
                 client_id : STRAVA_CLIENT_ID,
                 client_secret : STRAVA_CLIENT_SECRET,
-                code : code,
+                code,
                 grant_type : 'authorization_code'
-
             }
         )
     }
