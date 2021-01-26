@@ -68,6 +68,7 @@
     <td>
         <a target="_blank" href={`https://www.strava.com/activities/${activity.id}`}>
             {activity.name}
+            <br><span class="stravaBranding">View on Strava</span>
         </a>
     </td>   
     <td>
@@ -131,6 +132,15 @@
 </tr>
 
 <style>
+    a {
+        color: black;
+        font-weight: bold;
+    }
+    a .stravaBranding {
+        color: #FC4C02;
+        font-weight: bold;
+        font-size: small;
+    }
     .end > td {
         border-bottom: 1px solid grey;
         padding-bottom: 10px;
