@@ -4,7 +4,7 @@
 export function pickBike (activity, rules) {
     let speed = mps2mph(activity.average_speed);
     let temp = c2f(activity.average_temp);
-    for (let rule of rules) {
+    for (let rule of rules) {      
         // type match
        if (!rule.defaultType || rule.defaultType == activity.type) {
            // speed match
@@ -23,7 +23,9 @@ export function pickBike (activity, rules) {
                             (!rule.minTemp || rule.minTemp < temp)
                         ) 
                     )) {
-                        return rule.bike
+                        if (rule.bike) {
+                            return rule.bike
+                        }
                     }
             }
        }

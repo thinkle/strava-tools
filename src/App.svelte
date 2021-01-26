@@ -3,8 +3,9 @@
 </script>
 
 <main>
-	<h1>Strava Gear AutoFix</h1>
+	<h1>Strava Tools</h1>
 	<p>This App will magically auto-correct your gear!</p>
+	<p>Also, maps!</p>
 	<Login/>
 </main>
 

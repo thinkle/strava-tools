@@ -2,58 +2,27 @@
     import { bind, init } from "svelte/internal";
     import { token } from "./stores.js";
     import { onMount } from "svelte";
+    import { getActivities, getAthlete } from './strava.js';
     import RuleEditor from "./RuleEditor.svelte";
     import Activity from "./Activity.svelte";
-
+    import RouteFinder from "./RouteFinder.svelte";
+    let fetching;
     let data;
-    let apiRequest;
     const uri = "/.netlify/functions/api";
-    async function getData() {
-        let response = await fetch(uri, {
-            method: "POST",
-            body: JSON.stringify(apiRequest),
-        });
-        data = await response.json();
-    }
 
-    async function getAthleteData() {
-        let response = await fetch(
-            //$ http GET "https://www.strava.com/api/v3/athlete" "Authorization: Bearer [[token]]"
-            "https://www.strava.com/api/v3/athlete",
-            {
-                headers: {
-                    Authorization: "Bearer " + $token.access_token,
-                },
-            }
-        );
-        athleteData = await response.json();
-        console.log("Got data!", athleteData);
-        return;
-        apiRequest = {
-            token: $token.access_token,
-            method: "getAthlete",
-        };
-        await getData();
-        athleteData = data;
-        console.log("First round:", athleteData);
+    async function getAthleteData() {        
+        athleteData = await getAthlete();
     }
     let athleteData;
     let page = 1;
     async function getActivityData() {
-        let response = await fetch(
-            `https://www.strava.com/api/v3/activities?page=${page}&per_page=60`,
-            {
-                headers: {
-                    Authorization: "Bearer " + $token.access_token,
-                },
-            }
+        fetching = true;
+        let allActivities = await getActivities(page,30);
+        activities = allActivities.filter(
+                (activity) => activity.type.indexOf("Ride") > -1
         );
-        activities = await response.json();
-        activities = activities.filter(
-            (activity) => activity.type.indexOf("Ride") > -1
-        );
-        console.log("Got activity data!", activities);
-        return;
+        console.log('Got em',activities)
+        fetching = false;
     }
     let activities = [];
 
@@ -70,44 +39,52 @@
     {#if $token}
         Hi there, {athleteData && athleteData.firstname}!
         <button on:click={getAthleteData}>Refresh athlete data!</button>
-        <button on:click={getActivityData}>Refresh activity data!</button>
     {:else}
         Not logged in yet :(
     {/if}
+    <h2>Bike Choose / Editor</h2>
+    <p>
+        See your past Strava rides w/ bikes. Highlight bikes that don't match
+        rules you set. Fix bikes to match your rules with a quick click.
+    </p>
+
+    <button on:click={getActivityData}>Refresh activity data!</button>
 
     {#if athleteData && athleteData.bikes}
         <button on:click={() => (showEditor = !showEditor)}
-            >Show Bike Rule Editor</button
+            >{#if showEditor}Hide{:else}Show{/if} Bike Rule Editor</button
         >
         {#if showEditor}<RuleEditor bikes={athleteData.bikes} />{/if}
     {/if}
 
     <table>
         <tbody>
-            <tr>
-
-                <td colspan="8">
-                    Strava Activities
-                </td>
+            <tr class="opaque">
+                <th colspan="8"> Strava Activities </th>
             </tr>
-            <tr>
-                <td colspan="8" class="toolbar">
-                    {#if page > 0}
+            <tr class="opaque">
+                <th colspan="8" class="toolbar">
+                    {#if page > 1}
                         <button
                             on:click={() => {
                                 page -= 1;
                                 getActivityData();
                             }}>Prev page</button
                         >
-                    {/if}              
+                        {#if fetching}
+                            ...
+                        {:else}
+                            Page #{page}
+                        {/if}
+                    {/if}
                     <button
                         on:click={() => {
                             page += 1;
                             getActivityData();
                         }}> Next page </button>
-                </td>
+                </th>
             </tr>
-            <tr>
+            <tr class="opaque">
                 <th>Date</th>
                 <th>Title</th>
                 <th>Type</th>
@@ -125,7 +102,29 @@
 </div>
 
 <style>
+    table {
+        margin: auto;
+        max-width: 1100px;
+    }
     .toolbar {
         text-align: right;
-    }  
+    }
+    th {
+        position: sticky;
+    }
+    .opaque,
+    .opaque > * {
+        background-color: white;
+        z-index: 1;
+    }
+    tr:nth-child(1) th {
+        top: 0;
+    }
+    tr:nth-child(2) th {
+        top: 1rem;
+    }
+    tr:nth-child(3) th {
+        top: 3rem;
+        border-bottom: 3px solid #f88;
+    }
 </style>

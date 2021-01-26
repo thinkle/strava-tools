@@ -1,14 +1,14 @@
 <script>
 import Polyline from '@mapbox/polyline';
 import MapboxGL from 'mapbox-gl';
+import {distance} from './geometry.js';
 export let polyline
-console.log('Map from polyline:',polyline)
+
 let coordinates = [];
 let mapDiv;
 let showMap = false;
 const token = 'MAPBOX_TOKEN'
 let coordinateData = {}
-$: console.log('Mapdiv: ',mapDiv)
 $: {
     if (polyline) {
         coordinates = Polyline.decode(polyline);
@@ -17,10 +17,7 @@ $: {
 }
 $: {
     if (mapDiv && coordinateData.clat) {
-        console.log('loaded mapDiv token: ',token)
-        //console.log('polyline: ',JSON.stringify(coordinates))
         MapboxGL.accessToken = token;
-        console.log('Working with data: ',coordinateData)
         let map = new MapboxGL.Map({
             container: mapDiv,
             style : 'mapbox://styles/tmhinkle/ckkcnw1l25c8u17nthwt1amxc',
@@ -123,43 +120,17 @@ function getZoom (minLat,maxLat,minLon,maxLon) {
     }
     for (let level=22; level > -1; level--) {
         if (latSpanKM*1000 < metersPerBox[level]) {
-            console.log('Distance spanned is',latSpanKM);
-            console.log('We expect',
-            metersPerBox[level],'meters per box')
             return level;
         }
     }
     return 0
 }
 
-function distance(lat1, lon1, lat2, lon2, unit) {
-    /* https://www.geodatasource.com/developers/javascript */
-	if ((lat1 == lat2) && (lon1 == lon2)) {
-		return 0;
-	}
-	else {
-		var radlat1 = Math.PI * lat1/180;
-		var radlat2 = Math.PI * lat2/180;
-		var theta = lon1-lon2;
-		var radtheta = Math.PI * theta/180;
-		var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-		if (dist > 1) {
-			dist = 1;
-		}
-		dist = Math.acos(dist);
-		dist = dist * 180/Math.PI;
-		dist = dist * 60 * 1.1515;
-		if (unit=="K") { dist = dist * 1.609344 }
-		if (unit=="N") { dist = dist * 0.8684 }
-		return dist;
-	}
-}
 
 let canvas
 let scale
 $: {
     if (canvas && coordinates && coordinates.length) {
-        console.log('Draw it baby!')
         // we should fix this to use an actual projection at some point
         // in the future... this will do for now :)
         let ctx = canvas.getContext('2d');
@@ -176,7 +147,6 @@ $: {
         //
         //
         scale =  500 / biggest;
-        console.log('Scale for ',biggest,'pixels wide = multiply by...',scale);
         ctx.moveTo(
             scale * (coordinates[0][1]  - coordinateData.minLon),
             500 - scale * (coordinates[0][0] - coordinateData.minLat) * latLonFactor,
@@ -198,8 +168,8 @@ $: {
 <svelte:head>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css' rel='stylesheet' />
 </svelte:head>
-<span on:click={()=>showMap=!showMap}>
-    <span>{showMap && "Wow a big " || "Show"} map!</span>
+<span class='iconbox' on:click={()=>showMap=!showMap}>
+    <span>{showMap && "Hide" || "Show"} map!</span>
     <canvas 
         width=500
         height=500
@@ -214,6 +184,27 @@ $: {
 </span>
 
 <style>
+    .iconbox span {
+        opacity: 0;
+        transition: opacity 300ms;
+    }
+    .iconbox:hover span {
+        opacity: 1;
+    }
+    .iconbox {
+        position: relative;
+    }
+    .iconbox span {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: block;
+        text-align: center;
+        background-color: #fff8;
+        color: #622;
+        font-weight: bold;
+    }
     canvas {
         width: 50px;
         height: 50px;

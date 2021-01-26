@@ -1,4 +1,4 @@
-    <script>
+<script>
     import {bikeSettings} from './stores.js'
     export let bikes
     import { flip } from 'svelte/animate';

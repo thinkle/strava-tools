@@ -4,12 +4,12 @@
     import {token,bikeSettings} from './stores.js'
     import {pickBike} from './bikePicker.js';
     import Map from './Map.svelte';
-    let defaultBike = athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
+    let defaultBike = athlete && athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
     let showOthers = false;
 
     function getBike (gear_id) {
         if (athlete) {
-            let theBike = athlete.bikes.find((b)=>b.id==gear_id);
+            let theBike = athlete && athlete.bikes.find((b)=>b.id==gear_id);
             if (theBike) {
                 return theBike
             }
@@ -50,13 +50,15 @@
         currentBike = getBike(activity.gear_id)
         wrongBike = ruleBasedBike.id != currentBike.id
     }
-    let currentBike  = getBike(activity.gear_id);
-    let ruleBasedBike = getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
-    let wrongBike = ruleBasedBike.id != currentBike.id
+    let currentBike  = athlete && getBike(activity.gear_id);
+    let ruleBasedBike = athlete && getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
+    let wrongBike = athlete && ruleBasedBike.id != currentBike.id
     $: {
-        currentBike = getBike(activity.gear_id);
-        ruleBasedBike = getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
-        wrongBike = ruleBasedBike.id != currentBike.id
+        if (athlete) {
+            currentBike = getBike(activity.gear_id);
+            ruleBasedBike = getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
+            wrongBike = ruleBasedBike.id != currentBike.id
+        }
     }
 </script>
 <tr class="activity" class:wrongBike>
@@ -64,7 +66,7 @@
         {new Date(activity.start_date).toLocaleDateString()}        
     </td>
     <td>
-        <a href={`https://www.strava.com/activities/${activity.id}`}>
+        <a target="_blank" href={`https://www.strava.com/activities/${activity.id}`}>
             {activity.name}
         </a>
     </td>   
@@ -84,6 +86,7 @@
     <td>{#if activity.average_temp}
         {activity.average_temp.toFixed(1)}°C
     {/if}</td>
+    {#if athlete}
     <td>
         {currentBike.name}            
     </td>
@@ -94,8 +97,15 @@
                 Set to {ruleBasedBike.name}
             </b>
         </button>
+        <br>
         {/if}
-        <span on:click={()=>showOthers=!showOthers}>Bike list...</span>
+        <span on:click={()=>showOthers=!showOthers}>
+            {#if wrongBike}
+            Other bikes...
+            {:else}
+            Bike list...
+            {/if}
+        </span>
         {#if showOthers}
             <small>
                 {#if athlete && athlete.bikes} 
@@ -110,11 +120,12 @@
             </small>
         {/if}
     </td>
+    {/if}
 </tr>
 <tr class='end'>
     <td colspan='8'>
         <div  class='map'>
-            <Map polyline={activity.map.summary_polyline}/>
+            <Map polyline={activity && activity.map && activity.map.summary_polyline}/> 
         </div>
     </td>
 </tr>

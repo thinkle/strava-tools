@@ -2,5 +2,4 @@ node_modules/*
 /functions/*
 # Local Netlify folder
 .netlify
-public/build/bundle.js
-public/build/bundle.js.map
+public/build/*
