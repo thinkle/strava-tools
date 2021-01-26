@@ -88,10 +88,18 @@
             <RouteFinder/>
         {/if}
     {:else if !$token}
-        <a href={loginUri}>Log in</a>
+        <a href={loginUri}>
+            <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
+        </a>
     {:else}
         Refreshing token... one second...
         <button on:click={clearToken}>Give up</button>
 
     {/if}
 </div>
+
+<style>
+    .stravalogin {
+        height: 48px;
+    }
+</style>
