@@ -126,13 +126,14 @@
     <h3>Find Routes by Location</h3>
     <div>
         <p>Search for activities within: <input type='number' bind:value={metersWithin}> meters</p>
+        <div>
+            Searching last {activities.length} activities...
+            <button on:click={loadMoreActivities}>Load more</button>
+        </div>
         <div class='main' bind:this={mainMap}/>
     </div>
 </div>
-<div>
-    Searching last {activities.length} activities...
-    <button on:click={loadMoreActivities}>Load more</button>
-</div>
+<h3>{hits.length} Results</h3>
 <table>
     {#each hits as activity}
         <Activity activity={activity}/>
@@ -141,8 +142,8 @@
 
 <style>
     .main {
-        width: 800px;
-        height: 800px;
+        width: 100%;
+        height: 500px;
         margin: auto;
     }
 </style>
