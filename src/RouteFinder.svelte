@@ -127,7 +127,7 @@
                                 "line-cap": "round",
                             },
                             paint: {
-                                "line-color": "#f88",
+                                "line-color": "#ff3e00",
                                 "line-width": 3,
                             },
                         });
@@ -162,11 +162,15 @@
         </div>
         <div>
             Searching last {activities.length} activities...
-            <button disabled={loading} on:click={loadMoreActivities}>
+            <button 
+                disabled={loading} 
+                on:click={loadMoreActivities}
+                class:highlight={activities.length==0}
+            >
                 Load{#if loading}
                     ing…&nbsp;
                 {:else}
-                    &nbsp;more
+                    &nbsp;{#if activities.length}more{:else}activities{/if}
                 {/if}
             </button>
         </div>
@@ -191,6 +195,11 @@
 </table>
 
 <style>
+    .highlight {
+        font-weight: bold;
+        background-color: #bd3001;
+        color: white;
+    }
     h3 {
         margin: 0;
     }

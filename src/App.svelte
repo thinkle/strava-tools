@@ -3,8 +3,8 @@
 </script>
 
 <main>
-	<h1>Strava Tools</h1>
-	<p>This App will magically auto-correct your gear!</p>
+	<h1>Tom's Strava Tools</h1>
+	<p>This App will help map the right bike to each ride!</p>
 	<p>Also, maps!</p>
 	<Login/>
 </main>

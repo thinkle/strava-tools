@@ -146,7 +146,7 @@
         flex-grow: 1
     }
     .wrongBike {
-        color: red;
+        color: #ff3e00;
     }
     .activity {
         border: 1px solid #333;
