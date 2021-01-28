@@ -5,7 +5,7 @@
     import {pickBike} from './bikePicker.js';
     import Map from './Map.svelte';
     let defaultBike = athlete && athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
-    let showOthers = false;
+    let showOthers = true;
 
     function getBike (gear_id) {
         if (athlete) {
