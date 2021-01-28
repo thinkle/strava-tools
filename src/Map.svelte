@@ -49,7 +49,7 @@ $: {
                     'line-cap':'round'
                 },
                 paint: {
-                    'line-color':'#f88',
+                    'line-color':'#ff3e00',
                     'line-width':3
                 }
             })
@@ -177,8 +177,6 @@ $: {
 </span>
 <span>
 {#if showMap}
-    <p>Starts at: {coordinates[0]}; 
-    <br> on: {JSON.stringify(coordinateData)}</p>
     <section bind:this={mapDiv}></section>
 {/if}
 </span>
@@ -210,7 +208,7 @@ $: {
         height: 50px;
     }
     section {
-        width: 500px;
-        height: 500px;
+        width: 70vw;
+        height: 70vw;
     }
 </style>

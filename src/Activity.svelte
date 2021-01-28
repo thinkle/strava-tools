@@ -62,10 +62,10 @@
     }
 </script>
 <tr class="activity" class:wrongBike>
-    <td>
+    <td class='date'>
         {new Date(activity.start_date).toLocaleDateString()}        
     </td>
-    <td>
+    <td class='title'>
         <a target="_blank" href={`https://www.strava.com/activities/${activity.id}`}>
             {activity.name}
             <br><span class="stravaBranding">View on Strava</span>
@@ -74,24 +74,24 @@
     <td>
         {activity.type}
     </td>
-    <td>
+    <td class='distance'>
         {#if activity.distance}
         {(activity.distance*0.000621371).toFixed(1)} miles
         {/if}
     </td>
-    <td>
+    <td class='speed'>
         {#if activity.average_speed}
         {(activity.average_speed*2.23694).toFixed(1)}mph
         {/if}
     </td>
-    <td>{#if activity.average_temp}
+    <td class='temp'>{#if activity.average_temp}
         {activity.average_temp.toFixed(1)}°C
     {/if}</td>
     {#if athlete}
-    <td>
+    <td class='bike'>
         {currentBike.name}            
     </td>
-    <td>
+    <td class='change'>
         {#if wrongBike}
         <button on:click={()=>changeBike(activity,ruleBasedBike)}>
             <b>
@@ -124,7 +124,7 @@
     {/if}
 </tr>
 <tr class='end'>
-    <td colspan='8'>
+    <td colspan='8' class='mapwrap'>
         <div  class='map'>
             <Map polyline={activity && activity.map && activity.map.summary_polyline}/> 
         </div>
@@ -132,6 +132,7 @@
 </tr>
 
 <style>
+    
     a {
         color: black;
         font-weight: bold;
@@ -163,4 +164,66 @@
         padding: 2em;
         margin-bottom: 1em;
     }
+
+    @media 
+    only screen and (max-width: 760px),
+    (min-device-width: 768px) and (max-device-width: 1024px)  {
+
+	/* Force table to not be like tables anymore */
+	td, tr { 
+		display: block; 
+	}
+			
+    tr.activity { 
+        border: 1px solid #ccc; 
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .end {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+	td { 
+		/* Behave  like a "row" */
+		border: none;
+		border-bottom: 1px solid #eee; 
+		position: relative;
+		padding-left: 50%; 
+    }
+    .end td {
+        padding-left: 1rem;
+    }
+	
+	td:before { 
+		/* Now like a table header */
+		position: absolute;
+		/* Top/left values mimic padding */
+		top: 6px;
+		left: 6px;
+		width: 45%; 
+		padding-right: 10px; 
+		white-space: nowrap;
+	}
+	
+	/*
+	Label the data
+	*/
+    .date:before {content: "Date"}
+    .title:before { content: "Activity"; }
+	.distance:before { content: "Distance"; }
+	.speed:before { content: "Ave. Speed"; }
+	.temp:before { content: "Ave. Temp"; }
+	.bike:before { content: "Bike"; }
+	.change:before { content: "Change Bike"; }
+    .mapwrap { content: "Map"; }
+    .map {
+        display: block;
+        text-align: center;
+    }
+    
+}
+
+
 </style>

@@ -84,7 +84,7 @@
                         }}> Next page </button>
                 </th>
             </tr>
-            <tr class="opaque">
+            <tr class="opaque headers">
                 <th>Date</th>
                 <th>Title</th>
                 <th>Type</th>
@@ -126,5 +126,12 @@
     tr:nth-child(3) th {
         top: 3rem;
         border-bottom: 3px solid #f88;
+    }
+    @media 
+    only screen and (max-width: 760px),
+    (min-device-width: 768px) and (max-device-width: 1024px)  {
+        .headers {
+            display: none;
+        }
     }
 </style>

@@ -218,6 +218,8 @@
         z-index: 2;
         background-color: #fff7;
         align-items: center;
+        margin: auto;
+        max-width: 1200px;
     }
     nav :nth-child(2) {
         margin-left: auto;
