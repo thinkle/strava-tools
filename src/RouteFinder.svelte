@@ -43,6 +43,14 @@
                 tlat = location.lat;
             });
             //loadMoreActivities();
+
+            map.on('dblclick', (e)=>{
+                console.log('doubleclick ',e.lngLat.lng);
+                //tlon = e.lngLat.lng;
+                //tlat = e.lngLat.lat;
+                marker.setLngLat(e.lngLat)             
+            })
+
         }
     }
 
