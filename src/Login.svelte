@@ -5,7 +5,9 @@
     const clientID = STRAVA_CLIENT_ID;
     const netlify_uri = "NETLIFY_URL";
     const scopes = "activity:write,profile:read_all,activity:read_all";
+    const roScopes = 'activity:read_all';
     const loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${scopes}`;
+    const roLoginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${roScopes}`;
     let loginCode = new URLSearchParams(location.search).get("code");
     let authenticated;
     let mode;
@@ -88,9 +90,16 @@
             <RouteFinder/>
         {/if}
     {:else if !$token}
+        Read/Write (for bike chooser tool + find-myroute):
         <a href={loginUri}>
             <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
         </a>
+
+        Read only (for find-my-route only): 
+        <a href={loginUri}>
+            <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
+        </a>
+
     {:else}
         Refreshing token... one second...
         <button on:click={clearToken}>Give up</button>
