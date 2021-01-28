@@ -12,6 +12,8 @@
     let map;
     let lastActivities;
     let start;
+    let first;
+    let last;
     onMount(async () => {
         lastActivities = await getActivities(1, 1);
     });
@@ -70,6 +72,14 @@
             console.log("No new activities?");
         }
         loading = false;
+        try {
+            last = new Date(activities[0].start_date).toLocaleDateString();
+            first = new Date(activities[activities.length - 1].start_date).toLocaleDateString()  
+        }  catch (err) {
+            first = undefined
+            last = undefined
+            console.log('trouble w dates?',err)
+        } 
     }
     let loading;
     let metersWithin = 500;
@@ -168,8 +178,10 @@
                 <a href="#results">{hits.length} hits</a>
             {/if}
         </div>
-        <div>
-            Searching last {activities.length} activities...
+        <div class='searchingInfo'>Searching {activities.length} activities
+            {#if first}from {first} to {last}{/if}
+        </div>
+        <div>         
             <button 
                 disabled={loading} 
                 on:click={loadMoreActivities}
@@ -250,5 +262,8 @@
     }
     table {
         margin: auto;
+    }
+    .searchingInfo {
+        font-size: x-small;
     }
 </style>
