@@ -90,13 +90,13 @@
             <RouteFinder/>
         {/if}
     {:else if !$token}
-        Read/Write (for bike chooser tool + find-myroute):
-        <a href={loginUri}>
+        <br>Read/Write (for bike chooser tool + find-myroute):
+        <br><a href={loginUri}>
             <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
         </a>
-
-        Read only (for find-my-route only): 
-        <a href={loginUri}>
+        <br>
+        <br>Read only (for find-my-route only): 
+        <br><a href={roLoginUri}>
             <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
         </a>
 
