@@ -1,6 +1,6 @@
 <script>
     import { bind, init } from "svelte/internal";
-    import { token } from "./stores.js";
+    import { token, bikeSettings } from "./stores.js";
     import { onMount } from "svelte";
     import { getActivities, getAthlete } from './strava.js';
     import RuleEditor from "./RuleEditor.svelte";
@@ -33,6 +33,13 @@
         }
     });
     let showEditor;
+    $: if (athleteData && athleteData.bikes) {
+        if (!$bikeSettings.length) {
+            console.log('no rules, show editor')
+            showEditor = true;
+        }
+    }
+    let onlyShowMismatches
 </script>
 
 <div>
@@ -64,6 +71,7 @@
             </tr>
             <tr class="opaque">
                 <th colspan="8" class="toolbar">
+                    <input type='checkbox' bind:checked={onlyShowMismatches}> Only show mismatches
                     {#if page > 1}
                         <button
                             on:click={() => {
@@ -94,8 +102,8 @@
                 <th>Bike</th>
                 <th />
             </tr>
-            {#each activities as activity, n}
-                <Activity athlete={athleteData} {activity} />
+            {#each activities as activity, n}            
+                <Activity {onlyShowMismatches} athlete={athleteData} {activity} />
             {/each}
         </tbody>
     </table>
