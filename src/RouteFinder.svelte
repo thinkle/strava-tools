@@ -10,6 +10,7 @@
     let tlon;
     let tlat;
     let map;
+    let marker;
     let lastActivities;
     let start;
     let first;
@@ -31,7 +32,7 @@
                 center: [coord[1], coord[0]],
                 zoom: 10,
             });
-            var marker = new MapboxGL.Marker({
+            marker = new MapboxGL.Marker({
                 color: "#FFFFFF",
                 draggable: true,
             })
@@ -48,9 +49,7 @@
 
             map.on('dblclick', (e)=>{
                 console.log('doubleclick ',e.lngLat.lng);
-                //tlon = e.lngLat.lng;
-                //tlat = e.lngLat.lat;
-                marker.setLngLat(e.lngLat)             
+                marker.setLngLat(e.lngLat);
             })
 
         }
