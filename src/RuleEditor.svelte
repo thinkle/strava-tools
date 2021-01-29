@@ -31,10 +31,10 @@
     <div>
         <h3>Rules for Bikes!</h3>
         <button on:click={saveSettings}>Save</button>
-        {JSON.stringify($bikeSettings)}
         Athlete has {bikes.length} bikes.
         {#if bikes.length <=1}
-            This tool is useless for you. You only have one bike.
+            This tool is useless for you. You only have one bike (at least according to Strava).
+            Have you considered the n+1 rule?
         {/if}
         {#each $bikeSettings as rule,n (rule)}
         <section  key={rule}
@@ -101,17 +101,16 @@
                         <option value={bike.id}>{bike.name}</option>
                         {/each}
                     </select>
+                    is the default for...
                 </h3>   
-                <div>
-                    Default for: 
+                <div>                    
                     <select bind:value={rule.defaultType}>
-                        <option value={undefined}>None</option>
                         <option value='All'>All rides</option>
                         <option value='VirtualRide'>Virtual Rides</option>
                         <option value='Ride'>Real Rides</option>
                     </select>
-                    <span><input type='checkbox' bind:checked={rule.speedLimit}>by Speed</span>
-                    <span><input type='checkbox' bind:checked={rule.tempLimit}>by Temp</span>
+                    <span><input type='checkbox' bind:checked={rule.speedLimit}>by speed</span>
+                    <span><input type='checkbox' bind:checked={rule.tempLimit}>my temp</span>
                     {#if rule.speedLimit}
                         <br>Average Speed: <input bind:value={rule.minSpeed} type='number'>
                         &ndash;<input bind:value={rule.maxSpeed} type='number'>mph
@@ -121,6 +120,18 @@
                     &ndash;<input bind:value={rule.maxTemp} type='number'>°F
                 {/if}
                 </div>
+            </div>
+        </section>
+        {:else}
+        <section>
+            <div>
+                You don't have any custom rules yet. You can add rules to set different defaults
+                for different speeds or temperatures.
+                <a href="#" on:click={()=>{
+                     $bikeSettings = [
+                            {},
+                     ]
+                }}>Add your first custom rule!</a>
             </div>
         </section>
         {/each}
