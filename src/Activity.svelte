@@ -1,6 +1,7 @@
 <script>
-    export let athlete
     export let activity
+    export let athlete=undefined
+    export let onlyShowMismatches=undefined
     import {token,bikeSettings} from './stores.js'
     import {pickBike} from './bikePicker.js';
     import Map from './Map.svelte';
@@ -61,6 +62,7 @@
         }
     }
 </script>
+{#if !onlyShowMismatches || wrongBike }
 <tr class="activity" class:wrongBike>
     <td class='date'>
         {new Date(activity.start_date).toLocaleDateString()}        
@@ -130,7 +132,7 @@
         </div>
     </td>
 </tr>
-
+{/if}
 <style>
     
     a {
