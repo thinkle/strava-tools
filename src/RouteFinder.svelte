@@ -3,9 +3,12 @@
     import Polyline from "@mapbox/polyline";
     import MapboxGL from "mapbox-gl";
     import Activity from "./Activity.svelte";
-    import { getActivities } from "./strava.js";
-    import { distance } from "./geometry.js";
-
+    import { getActivities, getAthlete } from "./strava.ts";
+    import { distance,closestBetween } from "./geometry.js";
+    import {getBike} from './bikePicker';
+    let athlete
+    async function load () {athlete = await getAthlete();}
+    load();
     let mainMap;
     let tlon;
     let tlat;
@@ -15,14 +18,44 @@
     let start;
     let first;
     let last;
+    let gearColors = [        
+        '#fe7f2d',
+        '#a09abc',
+        '#2176ae',
+        '#4b3b40',
+        '#9db17c',
+        '#16697a',
+        '#cb9cf2',
+        '#d64933',
+        '#9cde9f',
+        '#08605',
+        '#3d52d5',
+                        ]
+    let gearColorIndex = 0;
+    let colorByGear = {}
+    function getColorForGear (id) {
+        if (colorByGear[id]) {
+            return colorByGear[id];
+        } else {
+            colorByGear[id] = gearColors[gearColorIndex % gearColors.length];
+            gearColorIndex += 1;
+            return colorByGear[id];
+        }
+    }
+    const defaultColor = '#ff3e00'
     onMount(async () => {
-        lastActivities = await getActivities(1, 1);
+        lastActivities = await getActivities(1, 15);
     });
 
     $: {
         if (mainMap && lastActivities && lastActivities.length) {
-            let last = lastActivities[0];
-            let coord = last.start_latlng;
+            let n = 0
+            let last = lastActivities[n];
+            while (!last.start_latlng && n < lastActivities.length) {
+                n+=1;
+                last = lastActivities[n];
+            }
+            let coord = last.start_latlng || [0,0];
             tlat = coord[0];
             tlon = coord[1];
             MapboxGL.accessToken = "MAPBOX_TOKEN";
@@ -39,19 +72,14 @@
                 .setLngLat([coord[1], coord[0]])
                 .addTo(map);
 
-            marker.on("dragend", (e) => {
-                console.log("Marker at ", marker.getLngLat());
+            marker.on("dragend", (e) => {                
                 let location = marker.getLngLat();
                 tlon = location.lng;
                 tlat = location.lat;
             });
-            //loadMoreActivities();
-
             map.on('dblclick', (e)=>{
-                console.log('doubleclick ',e.lngLat.lng);
                 marker.setLngLat(e.lngLat);
             })
-
         }
     }
 
@@ -84,6 +112,7 @@
     let metersWithin = 500;
     let page = 0;
     let activities = [];
+    let layers = {}
     let hits = [];
     let sources = [];
     let activeSources = [];
@@ -93,17 +122,31 @@
                 if (activity.map && activity.map.summary_polyline) {
                     let coords = Polyline.decode(activity.map.summary_polyline);
                     activity.coordinates = coords;
-                    for (let c of coords) {
-                        if (
-                            distance(c[0], c[1], tlat, tlon, "K") <
+                    // let's just check the first two...
+                    /* if (coords && coords.length > 1) {
+                        console.log('Test closest between');
+                        console.log('First two, closest between...',
+                            closestBetween({lat:coords[0][0],
+                                            lng:coords[0][1]},
+                                            {lat:coords[1][0],
+                                            lng:coords[1][1]},
+                                            {lat:tlat,
+                                            lng:tlon})
+                        );
+                                        }  */
+                    for (let n=1; n<coords.length; n++) {
+                        let c1 = coords[n-1]
+                        let c2 = coords[n]
+                        let closestDistance = closestBetween(
+                                {lat:c1[0],lng:c1[1]},
+                                {lat:c2[0],lng:c2[1]},
+                                {lat:tlat,lng:tlon},
+                                metersWithin/5000
+                            )
+                        if (closestDistance
+                             <
                             metersWithin / 1000
-                        ) {
-                            console.log(
-                                activity,
-                                "is close!",
-                                distance(c[0], c[1], tlat, tlon, "K"),
-                                "km away"
-                            );
+                        ) { 
                             return true;
                         }
                     }
@@ -114,8 +157,27 @@
                     map.removeLayer(source);
                 }
             }
-            sources = [];
-            hits.forEach((hit) => {
+            sources = []; 
+            let hitsForLayers = [...hits]
+            hitsForLayers.sort(
+                (a,b)=>{
+                    if (customSorts[a.id] && customSorts[b.id]) {
+                        return (
+                            (customSorts[a.id]>customSorts[b.id]) && 1 || -1
+                            )
+                    } else {
+                        if (customSorts[a.id]) {
+                            return 1}
+                        else if (customSorts[b.id]) {return -1}
+                    }       
+                    if (a.startDate < b.startDate) {
+                        return 1
+                    } else {
+                        return -1
+                    }
+                }
+            );
+            hitsForLayers.forEach((hit) => {                
                 if (sources.indexOf(hit.id) == -1) {
                     if (!map.getSource(hit.id)) {
                         map.addSource(`${hit.id}`, {
@@ -135,19 +197,22 @@
                     sources.push(hit.id);
 
                     try {
-                        map.addLayer({
-                            id: "" + hit.id,
-                            type: "line",
-                            source: "" + hit.id,
-                            layout: {
-                                "line-join": "round",
-                                "line-cap": "round",
-                            },
-                            paint: {
-                                "line-color": "#ff3e00",
-                                "line-width": 3,
-                            },
-                        });
+                        if (!layers[hit.id]) {
+                            layers[hit.id] = {
+                                id: "" + hit.id,
+                                type: "line",
+                                source: "" + hit.id,
+                                layout: {
+                                    "line-join": "round",
+                                    "line-cap": "round",
+                                },
+                                paint: {
+                                    "line-color": hit.gear_id && getColorForGear(hit.gear_id) || defaultColor,
+                                    "line-width": 3,
+                                },
+                            }
+                        }
+                        map.addLayer(layers[hit.id]);  
                     } catch (err) {
                         console.log("Error adding layer to map", err);
                     }
@@ -155,6 +220,16 @@
             });
         }
     }
+
+    function updateActivityColor (activity, color) {
+        layers[activity.id].paint['line-color'] = color;
+        map.moveLayer(activity.id)
+        customSorts[activity.id] = customSortCount
+        customSortCount += 1;
+    }
+    let customSortCount = 1;
+    let customSorts = {}
+
 </script>
 
 <svelte:head>
@@ -194,6 +269,16 @@
             </button>
         </div>
     </nav>
+    <nav>
+        <div>
+{#each Object.keys(colorByGear) as gearColorId}
+<span style={`color:${colorByGear[gearColorId]}`}>
+    {athlete && getBike(gearColorId,athlete).name || gearColorId}</span>
+<span>  </span>
+{/each}
+
+        </div>
+    </nav>
     <div class="mapwrap">
         <div class="overlay">
             {#if start && start[0] == tlat && start[1] == tlon}
@@ -209,7 +294,19 @@
 <h3>{hits.length} Results</h3>
 <table id="results">
     {#each hits as activity}
-        <Activity {activity} />
+        <Activity chooser={false} {athlete} {activity} color={layers[activity.id]?.paint['line-color']}> 
+            <div class="colorChooser">
+                <span style={`color:${layers[activity.id].paint['line-color']}`}>Color: </span> 
+                {#each [defaultColor,...gearColors.slice(gearColorIndex)] as color}
+                        <button on:click={()=>updateActivityColor(activity,color)}
+                            style={`width:1em;background-color:${color}`}></button>
+                    {/each}
+                <input type="color" style="width:1em" value={layers[activity.id].paint['line-color']}
+                    on:change={(e)=>updateActivityColor(activity,e.target.value)}
+                >
+                <button on:click={updateActivityColor(activity,undefined)}>&times;</button>
+            </div>           
+        </Activity>
     {/each}
 </table>
 
@@ -264,5 +361,17 @@
     }
     .searchingInfo {
         font-size: x-small;
+    }
+    input {
+        padding: 0;
+    }
+    .colorChooser {
+        display: flex;
+        align-items: center;
+    }
+    .colorChooser * {
+        margin-bottom: 0;
+        margin-top: 0;
+        margin-left: 3px;
     }
 </style>

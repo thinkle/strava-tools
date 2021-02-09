@@ -1,27 +1,16 @@
 <script>
     export let activity
     export let athlete=undefined
+    export let color=undefined
     export let onlyShowMismatches=undefined
-    import {token,bikeSettings} from './stores.js'
-    import {pickBike} from './bikePicker.js';
+    export let chooser=true
+    import {token,bikeSettings} from './stores'
+    import {pickBike,getBike} from './bikePicker.js';
     import Map from './Map.svelte';
     let defaultBike = athlete && athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
     let showOthers = true;
 
-    function getBike (gear_id) {
-        if (athlete) {
-            let theBike = athlete && athlete.bikes.find((b)=>b.id==gear_id);
-            if (theBike) {
-                return theBike
-            }
-        }
-        else {
-            return {
-                name : 'none',
-                id : -1,
-            }
-        }
-    }
+   
 
     async function changeBike (activity,bike) {
         console.log('change the bike for',activity,'to',bike)
@@ -51,13 +40,13 @@
         currentBike = getBike(activity.gear_id)
         wrongBike = ruleBasedBike.id != currentBike.id
     }
-    let currentBike  = athlete && getBike(activity.gear_id);
-    let ruleBasedBike = athlete && getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
-    let wrongBike = athlete && ruleBasedBike.id != currentBike.id
+    let currentBike  = athlete && activity && activity.gear_id && getBike(activity.gear_id,athlete);
+    let ruleBasedBike = chooser && athlete && getBike(pickBike(activity,$bikeSettings) || defaultBike.id, athlete);
+    let wrongBike = chooser && athlete && ruleBasedBike.id != currentBike.id
     $: {
-        if (athlete) {
-            currentBike = getBike(activity.gear_id);
-            ruleBasedBike = getBike(pickBike(activity,$bikeSettings) || defaultBike.id);
+        if (athlete && chooser) {
+            currentBike = getBike(activity.gear_id, athlete);
+            ruleBasedBike = getBike(pickBike(activity,$bikeSettings, athlete) || defaultBike.id);
             wrongBike = ruleBasedBike.id != currentBike.id
         }
     }
@@ -90,45 +79,52 @@
         {activity.average_temp.toFixed(1)}°C
     {/if}</td>
     {#if athlete}
-    <td class='bike'>
-        {currentBike.name}            
-    </td>
-    <td class='change'>
-        {#if wrongBike}
-        <button on:click={()=>changeBike(activity,ruleBasedBike)}>
-            <b>
-                Set to {ruleBasedBike.name}
-            </b>
-        </button>
-        <br>
-        {/if}
-        <span on:click={()=>showOthers=!showOthers}>
-            {#if wrongBike}
-            Other bikes...
-            {:else}
-            Bike list...
-            {/if}
-        </span>
-        {#if showOthers}
-            <small>
-                {#if athlete && athlete.bikes} 
-                    {#each athlete.bikes as bike}
-                        {#if bike.id != currentBike.id && bike.id != ruleBasedBike.id}
-                            <br>
-                            <div on:click={()=>changeBike(activity,bike)}>&gt;{bike.name}                 
-                            </div>
-                        {/if}
-                    {/each}
+        <td class='bike'>
+            {currentBike && currentBike.name || ''}            
+        </td>
+        {#if chooser}
+            <td class='change'>     
+                {#if wrongBike}
+                <button on:click={()=>changeBike(activity,ruleBasedBike)}>
+                    <b>
+                        Set to {ruleBasedBike.name}
+                    </b>
+                </button>
+                <br>
                 {/if}
-            </small>
+                <span on:click={()=>showOthers=!showOthers}>
+                    {#if wrongBike}
+                    Other bikes...
+                    {:else}
+                    Bike list...
+                    {/if}
+                </span>
+                {#if showOthers}
+                    <small>
+                        {#if athlete && athlete.bikes} 
+                            {#each athlete.bikes as bike}
+                                {#if bike.id != currentBike.id && bike.id != ruleBasedBike.id}
+                                    <br>
+                                    <div on:click={()=>changeBike(activity,bike)}>&gt;{bike.name}                 
+                                    </div>
+                                {/if}
+                            {/each}
+                        {/if}
+                    </small>
+                {/if}
+            </td>
         {/if}
-    </td>
     {/if}
+    <td>
+        <slot></slot>
+    </td>
 </tr>
 <tr class='end'>
-    <td colspan='8' class='mapwrap'>
+    <td colspan='9' class='mapwrap'>
         <div  class='map'>
-            <Map polyline={activity && activity.map && activity.map.summary_polyline}/> 
+            <Map 
+            {color}
+            polyline={activity && activity.map && activity.map.summary_polyline}/> 
         </div>
     </td>
 </tr>

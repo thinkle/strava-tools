@@ -1,7 +1,7 @@
 <script>
     import Config from "./Config.svelte";
     import RouteFinder from './RouteFinder.svelte';
-    import { token } from "./stores.js";
+    import { token } from "./stores";
     const clientID = STRAVA_CLIENT_ID;
     const netlify_uri = "NETLIFY_URL";
     const scopes = "activity:write,profile:read_all,activity:read_all";
@@ -92,12 +92,12 @@
     {:else if !$token}
         <br>Read/Write (for bike chooser tool + find-myroute):
         <br><a href={loginUri}>
-            <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
+            <img alt="Log in with Strava" class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
         </a>
         <br>
         <br>Read only (for find-my-route only): 
         <br><a href={roLoginUri}>
-            <img class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
+            <img alt="Log in with Strava" class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
         </a>
 
     {:else}

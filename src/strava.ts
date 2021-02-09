@@ -1,6 +1,5 @@
-import {token} from './stores.js';
+import {token} from './stores';
 import { get } from 'svelte/store';
-
 
 export async function getActivities (page=1, per_page=60) {
     let response = await fetch(

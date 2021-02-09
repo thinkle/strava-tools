@@ -1,8 +1,8 @@
 <script>
     import { bind, init } from "svelte/internal";
-    import { token, bikeSettings } from "./stores.js";
+    import { token, bikeSettings } from "./stores.ts";
     import { onMount } from "svelte";
-    import { getActivities, getAthlete } from './strava.js';
+    import { getActivities, getAthlete } from './strava.ts';
     import RuleEditor from "./RuleEditor.svelte";
     import Activity from "./Activity.svelte";
     import RouteFinder from "./RouteFinder.svelte";

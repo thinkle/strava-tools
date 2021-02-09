@@ -3,6 +3,7 @@ import Polyline from '@mapbox/polyline';
 import MapboxGL from 'mapbox-gl';
 import {distance} from './geometry.js';
 export let polyline
+export let color='#ff3e00'
 
 let coordinates = [];
 let mapDiv;
@@ -49,7 +50,7 @@ $: {
                     'line-cap':'round'
                 },
                 paint: {
-                    'line-color':'#ff3e00',
+                    'line-color':color,
                     'line-width':3
                 }
             })
@@ -152,7 +153,7 @@ $: {
             500 - scale * (coordinates[0][0] - coordinateData.minLat) * latLonFactor,
             )
         ctx.beginPath()
-        ctx.strokeStyle = '#f88';
+        ctx.strokeStyle = color;
         ctx.lineWidth = 15
         for (let c of coordinates) {
             ctx.lineTo(

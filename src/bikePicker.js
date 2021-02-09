@@ -1,6 +1,22 @@
 // Logic for applying rules...
 //
 //
+
+export function getBike (gear_id, athlete) {
+    if (athlete) {
+        let theBike = athlete && athlete.bikes.find((b)=>b.id==gear_id);
+        if (theBike) {
+            return theBike
+        }
+    }
+    else {
+        return {
+            name : 'none',
+            id : -1,
+        }
+    }
+}
+
 export function pickBike (activity, rules) {
     let speed = mps2mph(activity.average_speed);
     let temp = c2f(activity.average_temp);

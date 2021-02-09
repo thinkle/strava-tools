@@ -1,5 +1,5 @@
 <script>
-    import {bikeSettings} from './stores.js'
+    import {bikeSettings} from './stores'
     export let bikes
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
