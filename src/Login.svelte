@@ -1,17 +1,18 @@
 <script>
     import Config from "./Config.svelte";
     import RouteFinder from './RouteFinder.svelte';
-    import { token } from "./stores";
+    import { token,scope } from "./stores";
+    export let onSelectCallback = ()=>{}
     const clientID = STRAVA_CLIENT_ID;
     const netlify_uri = "NETLIFY_URL";
     const scopes = "activity:write,profile:read_all,activity:read_all";
-    const roScopes = 'activity:read_all';
+    const roScopes = 'activity:read_all,profile:read_all';
     const loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${scopes}`;
     const roLoginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${roScopes}`;
     let loginCode = new URLSearchParams(location.search).get("code");
     let authenticated;
     let mode;
-    console.log("TOKEN:", $token);
+    console.log("TOKEN:", $token, 'Scope',$scope);
 
     if ($token) {
         if ($token.expires_at < new Date().getTime() / 1000) {
@@ -66,23 +67,36 @@
         let jsonResponse = await response.json();
         localStorage.setItem("token", JSON.stringify(jsonResponse.token));
         $token = jsonResponse.token;
+        localStorage.setItem('loginUri',location.search)
+        $scope = new URLSearchParams(location.search).get("scope")
+        localStorage.setItem('scope',$scope);
         history.pushState({}, null, "/");
     }
 
     function clearToken() {
         $token = undefined;
         localStorage.removeItem("token");
+        localStorage.removeItem('scope')
         authenticated = false;
     }
     const BIKE = 'bikematcher';
     const FIND = 'routefinder';
+
+    function setMode (newMode) {
+        console.log('setMode',newMode)
+        onSelectCallback(newMode);
+        mode = newMode;
+    }
 </script>
 
 <div>
-    {#if authenticated}
-        <p>You are logged in!</p>
-        <button on:click={()=>mode=BIKE}>Set bikes for rides</button>
-        <button on:click={()=>mode=FIND}>Find route by location</button>       
+    {#if authenticated}    
+        {#if $scope.indexOf('activity:write')>-1}
+            <button class:active={mode==BIKE} on:click={()=>setMode(BIKE)}>Set bikes for rides</button>        
+        {/if}
+        {#if $scope.indexOf('activity:read')>-1}
+            <button class:active={mode==FIND} on:click={()=>setMode(FIND)}>Find route by location</button>       
+        {/if}
         <button on:click={clearToken}>Log out</button>
         {#if mode==BIKE}
             <Config/>
@@ -90,6 +104,7 @@
             <RouteFinder/>
         {/if}
     {:else if !$token}
+        <h3>Log In</h3>
         <br>Read/Write (for bike chooser tool + find-myroute):
         <br><a href={loginUri}>
             <img alt="Log in with Strava" class="stravalogin" src="btn_strava_connectwith_orange.svg"/>
@@ -110,5 +125,26 @@
 <style>
     .stravalogin {
         height: 48px;
+    }
+    button {
+        border: none;
+        background-color: transparent;
+        text-decoration: underline;
+        color: #0033a0;
+    }
+    button:hover {
+        text-decoration: none;
+        border: 1px solid #0033a0;
+        transition: all 100ms;
+    }
+    .active:hover {
+        text-decoration: underline;
+        border: none;
+    }
+    .active {
+        font-weight: bold;
+        border: none;
+        transition: all 300ms;
+        color: black;
     }
 </style>

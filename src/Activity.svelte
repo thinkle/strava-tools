@@ -10,8 +10,6 @@
     let defaultBike = athlete && athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
     let showOthers = true;
 
-   
-
     async function changeBike (activity,bike) {
         console.log('change the bike for',activity,'to',bike)
         let update = {

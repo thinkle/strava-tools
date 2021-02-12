@@ -14,6 +14,7 @@
     let tlat;
     let map;
     let marker;
+    let mapReady;
     let lastActivities;
     let start;
     let first;
@@ -27,8 +28,8 @@
         '#16697a',
         '#cb9cf2',
         '#d64933',
-        '#9cde9f',
         '#08605',
+        '#9d9d24',
         '#3d52d5',
                         ]
     let gearColorIndex = 0;
@@ -38,6 +39,7 @@
             return colorByGear[id];
         } else {
             colorByGear[id] = gearColors[gearColorIndex % gearColors.length];
+            gearOrTypeToShowList[id] = true;
             gearColorIndex += 1;
             return colorByGear[id];
         }
@@ -45,6 +47,9 @@
     const defaultColor = '#ff3e00'
     onMount(async () => {
         lastActivities = await getActivities(1, 15);
+        if (activities.length==0) {
+            activities = [...lastActivities];
+        }
     });
 
     $: {
@@ -79,7 +84,10 @@
             });
             map.on('dblclick', (e)=>{
                 marker.setLngLat(e.lngLat);
-            })
+            });
+            map.on('style.load',()=>mapReady=true)
+            console.log('We as might as well load the ones we got...',lastActivities)
+            //loadMoreActivities(lastActivities);
         }
     }
 
@@ -90,9 +98,12 @@
     }
 
     async function loadMoreActivities() {
-        page += 1;
         loading = true;
+        page += 1;
         const newActivities = await getActivities(page, 100);
+        if (page==1) {
+            activities = [];
+        }
         if (newActivities) {
             activities = [...activities, ...newActivities];
         } else {
@@ -117,8 +128,16 @@
     let sources = [];
     let activeSources = [];
     $: {
-        if (map && activities.length && metersWithin) {
+        if (map && mapReady && activities.length && metersWithin) {
+            console.log('Re-check hits etc.')
             hits = activities.filter((activity) => {
+                for (let key in gearOrTypeToShowList) {
+                    if (!gearOrTypeToShowList[key]) {
+                        if (activity.type==key || activity.gear_id==key) {
+                            return false;
+                        }
+                    }
+                }
                 if (activity.map && activity.map.summary_polyline) {
                     let coords = Polyline.decode(activity.map.summary_polyline);
                     activity.coordinates = coords;
@@ -207,7 +226,7 @@
                                     "line-cap": "round",
                                 },
                                 paint: {
-                                    "line-color": hit.gear_id && getColorForGear(hit.gear_id) || defaultColor,
+                                    "line-color": hit.gear_id && getColorForGear(hit.gear_id) || hit.type && getColorForGear(hit.type) || defaultColor,
                                     "line-width": 3,
                                 },
                             }
@@ -230,6 +249,8 @@
     let customSortCount = 1;
     let customSorts = {}
 
+    let gearOrTypeToShowList = {}; // gear ID or activity type to filter out of list...
+
 </script>
 
 <svelte:head>
@@ -239,46 +260,49 @@
     />
 </svelte:head>
 <div>
-    <nav>
-        <h3>Find Routes by Location</h3>
-        <div>
-            Search for activities within: <input
-                type="number"
-                bind:value={metersWithin}
-            /> meters
-        </div>
-        <div>
-            {#if hits.length}
-                <a href="#results">{hits.length} hits</a>
-            {/if}
-        </div>
-        <div class='searchingInfo'>Searching {activities.length} activities
-            {#if first}from {first} to {last}{/if}
-        </div>
-        <div>         
-            <button 
-                disabled={loading} 
-                on:click={loadMoreActivities}
-                class:highlight={activities.length==0}
-            >
-                Load{#if loading}
-                    ing…&nbsp;
-                {:else}
-                    &nbsp;{#if activities.length}more{:else}activities{/if}
+    <div class="navcontainer">
+        <nav>
+            <h3>Find Routes by Location</h3>
+            <div>
+                Search for activities within: <input
+                    type="number"
+                    bind:value={metersWithin}
+                /> meters
+            </div>
+            <div>
+                {#if hits.length}
+                    <a href="#results">{hits.length} hits</a>
                 {/if}
-            </button>
-        </div>
-    </nav>
-    <nav>
-        <div>
-{#each Object.keys(colorByGear) as gearColorId}
-<span style={`color:${colorByGear[gearColorId]}`}>
-    {athlete && getBike(gearColorId,athlete).name || gearColorId}</span>
-<span>  </span>
-{/each}
-
-        </div>
-    </nav>
+            </div>
+            <div class='searchingInfo'>Searching {activities.length} activities
+                {#if first}from {first} to {last}{/if}
+            </div>
+            <div>         
+                <button 
+                    disabled={loading} 
+                    on:click={()=>loadMoreActivities()}
+                    class:highlight={activities.length==0}
+                >
+                    Load{#if loading}
+                        ing…&nbsp;
+                    {:else}
+                        &nbsp;{#if activities.length}more{:else}activities{/if}
+                    {/if}
+                </button>
+            </div>
+            </nav>
+            <nav>
+                <div style="margin:auto;">
+                    {#if Object.keys(colorByGear).length}Show: {/if}
+                    {#each Object.keys(colorByGear) as gearColorId}
+                    <span style={`color:${colorByGear[gearColorId]}`}>
+                        <input type="checkbox" bind:checked={gearOrTypeToShowList[gearColorId]}>
+                        {athlete && getBike(gearColorId,athlete)?.name || gearColorId}</span>
+                    <span>  </span>
+                    {/each}
+                </div>
+            </nav>
+    </div>
     <div class="mapwrap">
         <div class="overlay">
             {#if start && start[0] == tlat && start[1] == tlon}
@@ -293,17 +317,16 @@
 </div>
 <h3>{hits.length} Results</h3>
 <table id="results">
-    {#each hits as activity}
+    {#each hits as activity (activity.id)}
         <Activity chooser={false} {athlete} {activity} color={layers[activity.id]?.paint['line-color']}> 
             <div class="colorChooser">
-                <span style={`color:${layers[activity.id].paint['line-color']}`}>Color: </span> 
-                {#each [defaultColor,...gearColors.slice(gearColorIndex)] as color}
+                <span style={`color:${layers[activity.id].paint['line-color']}`}>Change Color: </span> 
+                <input type="color" style="width:1em" value={layers[activity.id].paint['line-color']}
+                on:change={(e)=>updateActivityColor(activity,e.target.value)}>
+                    {#each [defaultColor,...gearColors.slice(gearColorIndex)] as color}
                         <button on:click={()=>updateActivityColor(activity,color)}
                             style={`width:1em;background-color:${color}`}></button>
-                    {/each}
-                <input type="color" style="width:1em" value={layers[activity.id].paint['line-color']}
-                    on:change={(e)=>updateActivityColor(activity,e.target.value)}
-                >
+                    {/each}               
                 <button on:click={updateActivityColor(activity,undefined)}>&times;</button>
             </div>           
         </Activity>
@@ -319,11 +342,13 @@
     h3 {
         margin: 0;
     }
-    nav {
-        display: flex;
+    .navcontainer {
         position: sticky;
         top: 0;
         z-index: 2;
+    }
+    nav {
+        display: flex; 
         background-color: #fff7;
         align-items: center;
         margin: auto;
@@ -338,6 +363,7 @@
     nav div:nth-child(1) {
         margin-left: 0;
     }
+   
 
     .main {
         width: 90%;
@@ -368,6 +394,8 @@
     .colorChooser {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
+        max-width: 200px;
     }
     .colorChooser * {
         margin-bottom: 0;

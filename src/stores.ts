@@ -7,6 +7,9 @@ if (stored) {
 }
 export const token = writable(initialValue);
 
+let storedScope = localStorage.getItem('scope');
+export const scope = writable(storedScope);
+
 let initialBikeSettings = localStorage.getItem('bikeSettings');
 if (initialBikeSettings) {
     try {
@@ -19,5 +22,7 @@ if (initialBikeSettings) {
 } else {
     initialBikeSettings = []
 }
+
+
 
 export const bikeSettings = writable(initialBikeSettings)

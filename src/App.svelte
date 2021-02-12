@@ -1,21 +1,31 @@
 <script>
 	import Login from './Login.svelte'
 	let faq
+	let showInfo = true;
 </script>
 
 <main>
-	<h1>Tom's Cycling Tools</h1>
+	<h1>Tom's Cycling Tools {#if !showInfo}
+		<button on:click={()=>{showInfo=true}}>i</button>
+		{/if}</h1>
 	<img class='stravaBranding' src="api_logo_pwrdBy_strava_horiz_gray.svg" alt="Powered by Strava">
-	<p><b>Route Finder:</b> Drag location to a spot on the map, pick a threshhold, find the route
-		that goes directly by that spot.
-	</p>
-	<p><b>Bike Setter</b>: change which bike is associated with which ride. You can set up rules to 
-		have different defaults for virtual/real rides, or 
-		by speed or temperature. Right now, that just color-codes and makes it a bit quicker to change bikes to
-		the default. Makes it easy to scan the list for mismatches as well.
-	</p>
-	<p><a href='#' on:click={()=>faq=true}>FAQ</a></p>
-	<Login/>
+	
+	{#if showInfo}
+	<section>
+		<h3>About</h3>
+		<p><b>Route Finder:</b> Drag location to a spot on the map, pick a threshhold, find the route
+			that goes directly by that spot.
+		</p>
+		<p><b>Bike Setter</b>: change which bike is associated with which ride. You can set up rules to 
+			have different defaults for virtual/real rides, or 
+			by speed or temperature. Right now, that just color-codes and makes it a bit quicker to change bikes to
+			the default. Makes it easy to scan the list for mismatches as well.
+		</p>
+		<p><a href='#' on:click={()=>faq=true}>FAQ</a></p>
+		<button on:click={()=>{showInfo=false}}>❌</button>
+	</section>
+	{/if}
+	<Login onSelectCallback={()=>{showInfo=false}}/>
 	{#if faq}
 		<div class='modalBackground' on:click={()=>faq=false}>
 			<div class='modal' on:click={(e)=>e.stopPropagation()}>
@@ -45,11 +55,11 @@
 						check for rides that need to be updated and update them without you doing anything.
 						</p>
 						<p>
-							For the map finder, I'd like to improve the geometry a little bit to improve
-							the ability to find locations. The way the code works and the way the routes are
-							stored makes me believe the route finder will do badly with straight lines. Luckily,
-							I live in an area with winding roads and trails, but if you live somewhere with long
-							straight roads, my guess is this tool will work less well for you right now.
+							For the map finder, I may eventually bring in higher resolution data. Right now I'm just using
+							a "compressed" version of your route that comes with every ride on the default data strava
+							provides. In my experience, I don't notice the routes looking too inaccurate until they get
+							really long (I did a triple metric and on that route, you can definitely see that the
+							route data is lower resolution than it should be).
 						</p>
 					</dd>
 					
@@ -91,6 +101,30 @@
 		main {
 			max-width: none;
 		}
+	}
+	section {
+		position: relative;
+		padding: 25px;
+		text-align: left;
+		border: 1px solid #888;
+	}
+	section button {
+		position: absolute;
+		right: 3px;
+		top: 3px;
+	}
+	button {
+		border-radius: 50%;
+		text-align: center;
+		font-size: 12px;
+		height: 24px;
+		width: 24px;
+		display: inline-flex;
+		vertical-align: top;
+		align-items: center;
+		justify-items: center;
+		align-content: center;
+		justify-content: center;
 	}
 
 	.modalBackground {
