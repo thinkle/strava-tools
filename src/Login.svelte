@@ -90,7 +90,7 @@
 </script>
 
 <div>
-    {#if authenticated}    
+    {#if authenticated && $scope}    
         {#if $scope.indexOf('activity:write')>-1}
             <button class:active={mode==BIKE} on:click={()=>setMode(BIKE)}>Set bikes for rides</button>        
         {/if}
