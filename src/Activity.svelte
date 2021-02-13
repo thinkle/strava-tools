@@ -41,11 +41,14 @@
     let currentBike  = athlete && activity && activity.gear_id && getBike(activity.gear_id,athlete);
     let ruleBasedBike = chooser && athlete && getBike(pickBike(activity,$bikeSettings) || defaultBike.id, athlete);
     let wrongBike = chooser && athlete && ruleBasedBike.id != currentBike.id
+    console.log(activity.id,'Got bike, chooser',currentBike,'==',ruleBasedBike,'wrong?',wrongBike)
     $: {
         if (athlete && chooser) {
+            console.log(activity.id,'Reactive change bike/athlete',athlete,chooser)
             currentBike = getBike(activity.gear_id, athlete);
-            ruleBasedBike = getBike(pickBike(activity,$bikeSettings, athlete) || defaultBike.id);
+            ruleBasedBike = getBike(pickBike(activity,$bikeSettings, athlete) || defaultBike.id, athlete);
             wrongBike = ruleBasedBike.id != currentBike.id
+            console.log(activity.id,'Got bike, chooser',currentBike,'==',ruleBasedBike,'wrong?',wrongBike)
         }
     }
 </script>

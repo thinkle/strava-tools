@@ -2,6 +2,7 @@
 	import Login from './Login.svelte'
 	let faq
 	let showInfo = true;
+	import {scope} from './stores';
 </script>
 
 <main>
@@ -20,6 +21,12 @@
 			have different defaults for virtual/real rides, or 
 			by speed or temperature. Right now, that just color-codes and makes it a bit quicker to change bikes to
 			the default. Makes it easy to scan the list for mismatches as well.
+			{#if $scope && $scope.indexOf('write')==-1}
+			<b>Note: you have only given read-only permission to access the Strava API, so Bike Setter isn't
+				currently available. Log out and log back in with <em>write</em> permission in order to use
+				the bike setter tool.
+			</b>
+			{/if}
 		</p>
 		<p><a href='#' on:click={()=>faq=true}>FAQ</a></p>
 		<button on:click={()=>{showInfo=false}}>❌</button>
@@ -107,6 +114,8 @@
 		padding: 25px;
 		text-align: left;
 		border: 1px solid #888;
+		max-width: 55em;
+		margin: auto;
 	}
 	section button {
 		position: absolute;
@@ -143,6 +152,10 @@
 		color: #ddd;
 		padding: 1.5rem;
 		z-index: 4;
+	}
+
+	section p {
+		margin-bottom: 1em;
 	}
 
 	dl {

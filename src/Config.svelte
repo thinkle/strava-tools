@@ -103,7 +103,7 @@
                 <th />
             </tr>
             {#each activities as activity, n}            
-                <Activity {onlyShowMismatches} athlete={athleteData} {activity} />
+                <Activity chooser={true} {onlyShowMismatches} athlete={athleteData} {activity} />
             {/each}
         </tbody>
     </table>

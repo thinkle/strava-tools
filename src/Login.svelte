@@ -89,7 +89,7 @@
     }
 </script>
 
-<div>
+<div class:intro={!mode}>
     {#if authenticated && $scope}    
         {#if $scope.indexOf('activity:write')>-1}
             <button class:active={mode==BIKE} on:click={()=>setMode(BIKE)}>Set bikes for rides</button>        
@@ -97,7 +97,7 @@
         {#if $scope.indexOf('activity:read')>-1}
             <button class:active={mode==FIND} on:click={()=>setMode(FIND)}>Find route by location</button>       
         {/if}
-        <button on:click={clearToken}>Log out</button>
+        <button class="out" on:click={clearToken}>Log out</button>
         {#if mode==BIKE}
             <Config/>
         {:else if mode==FIND}
@@ -126,6 +126,7 @@
     .stravalogin {
         height: 48px;
     }
+
     button {
         border: none;
         background-color: transparent;
@@ -136,6 +137,23 @@
         text-decoration: none;
         border: 1px solid #0033a0;
         transition: all 100ms;
+    }
+    .intro button {
+        font-size: x-large;
+        border: 1px solid #777;
+        display: block;
+        text-decoration: none;
+        font-weight: bold;
+        text-align: center;
+        margin: auto;
+        margin-top: 1em;
+        padding: 1em;
+        background-color: #ff3e00;
+        color: white;
+    }
+    .intro .out {
+        background-color: white;
+        color: #333;
     }
     .active:hover {
         text-decoration: underline;
