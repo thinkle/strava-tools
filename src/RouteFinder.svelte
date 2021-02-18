@@ -4,8 +4,9 @@
     import MapboxGL from "mapbox-gl";
     import Activity from "./Activity.svelte";
     import { getActivities, getAthlete } from "./strava.ts";
-    import { distance,closestBetween } from "./geometry.js";
+    import { distance, closestBetween } from "./geometry.js";
     import {getBike} from './bikePicker';
+    import {getColorForGear,getColors,setCustomColor} from './colors';
     let athlete
     async function load () {athlete = await getAthlete();}
     load();
@@ -19,32 +20,7 @@
     let start;
     let first;
     let last;
-    let gearColors = [        
-        '#fe7f2d',
-        '#a09abc',
-        '#2176ae',
-        '#4b3b40',
-        '#9db17c',
-        '#16697a',
-        '#cb9cf2',
-        '#d64933',
-        '#08605',
-        '#9d9d24',
-        '#3d52d5',
-                        ]
-    let gearColorIndex = 0;
-    let colorByGear = {}
-    function getColorForGear (id) {
-        if (colorByGear[id]) {
-            return colorByGear[id];
-        } else {
-            colorByGear[id] = gearColors[gearColorIndex % gearColors.length];
-            gearOrTypeToShowList[id] = true;
-            gearColorIndex += 1;
-            return colorByGear[id];
-        }
-    }
-    const defaultColor = '#ff3e00'
+
     onMount(async () => {
         lastActivities = await getActivities(1, 15);
         if (activities.length==0) {
@@ -52,43 +28,49 @@
         }
     });
 
+    function createMap () {
+        console.log('Creating map...',mainMap,lastActivities,tlat,tlon)
+        let n = 0
+        let last = lastActivities[n];
+        while (!last.start_latlng && n < lastActivities.length) {
+            n+=1;
+            last = lastActivities[n];
+        }
+        let coord = last.start_latlng || [0,0];
+        tlat = coord[0];
+        tlon = coord[1];
+        MapboxGL.accessToken = "MAPBOX_TOKEN";            
+        console.log('!!!!! New map!')
+        mapReady = false;
+        map = new MapboxGL.Map({
+            container: mainMap,
+            style: "mapbox://styles/tmhinkle/ckkcnw1l25c8u17nthwt1amxc",
+            center: [coord[1], coord[0]],
+            zoom: 10,
+        });
+        marker = new MapboxGL.Marker({
+            color: "#FFFFFF",
+            draggable: true,
+        })
+            .setLngLat([coord[1], coord[0]])
+            .addTo(map);
+
+        marker.on("dragend", (e) => {                
+            let location = marker.getLngLat();
+            tlon = location.lng;
+            tlat = location.lat;
+        });
+        map.on('dblclick', (e)=>{
+            marker.setLngLat(e.lngLat);
+        });
+        map.on('style.load',()=>mapReady=true)
+    }
+    
+
     $: {
         if (mainMap && lastActivities && lastActivities.length) {
-            let n = 0
-            let last = lastActivities[n];
-            while (!last.start_latlng && n < lastActivities.length) {
-                n+=1;
-                last = lastActivities[n];
-            }
-            let coord = last.start_latlng || [0,0];
-            tlat = coord[0];
-            tlon = coord[1];
-            MapboxGL.accessToken = "MAPBOX_TOKEN";
-            map = new MapboxGL.Map({
-                container: mainMap,
-                style: "mapbox://styles/tmhinkle/ckkcnw1l25c8u17nthwt1amxc",
-                center: [coord[1], coord[0]],
-                zoom: 10,
-            });
-            marker = new MapboxGL.Marker({
-                color: "#FFFFFF",
-                draggable: true,
-            })
-                .setLngLat([coord[1], coord[0]])
-                .addTo(map);
-
-            marker.on("dragend", (e) => {                
-                let location = marker.getLngLat();
-                tlon = location.lng;
-                tlat = location.lat;
-            });
-            map.on('dblclick', (e)=>{
-                marker.setLngLat(e.lngLat);
-            });
-            map.on('style.load',()=>mapReady=true)
-            console.log('We as might as well load the ones we got...',lastActivities)
-            //loadMoreActivities(lastActivities);
-        }
+            createMap()
+        } 
     }
 
     $: {
@@ -141,18 +123,6 @@
                 if (activity.map && activity.map.summary_polyline) {
                     let coords = Polyline.decode(activity.map.summary_polyline);
                     activity.coordinates = coords;
-                    // let's just check the first two...
-                    /* if (coords && coords.length > 1) {
-                        console.log('Test closest between');
-                        console.log('First two, closest between...',
-                            closestBetween({lat:coords[0][0],
-                                            lng:coords[0][1]},
-                                            {lat:coords[1][0],
-                                            lng:coords[1][1]},
-                                            {lat:tlat,
-                                            lng:tlon})
-                        );
-                                        }  */
                     for (let n=1; n<coords.length; n++) {
                         let c1 = coords[n-1]
                         let c2 = coords[n]
@@ -196,7 +166,9 @@
                     }
                 }
             );
-            hitsForLayers.forEach((hit) => {                
+            hitsForLayers.forEach((hit) => {
+                if (hit.type && gearOrTypeToShowList[hit.type]===undefined) {gearOrTypeToShowList[hit.type] = true;}
+                if (hit.gear_id && gearOrTypeToShowList[hit.gear_id]===undefined) {gearOrTypeToShowList[hit.gear_id] = true;}
                 if (sources.indexOf(hit.id) == -1) {
                     if (!map.getSource(hit.id)) {
                         map.addSource(`${hit.id}`, {
@@ -251,6 +223,28 @@
 
     let gearOrTypeToShowList = {}; // gear ID or activity type to filter out of list...
 
+    function showColorPicker (id) {
+        colorPickerFor = id;
+    }
+    function hideColorPicker () {
+        colorPickerFor = null;
+    }
+    let colorPickerFor
+    function setGearColor (color) {
+        let oldColor = getColorForGear(colorPickerFor)
+        setCustomColor(colorPickerFor,color);
+        activities.map(
+            (activity) => {
+                if (layers[activity.id] && layers[activity.id].paint && layers[activity.id].paint['line-color']==oldColor) {
+                    if (activity.gear_id == colorPickerFor || activity.type == colorPickerFor) {
+                        console.log('Update color for ',activity.id,activity.name)
+                        layers[activity.id].paint['line-color'] = color; // update!
+                    }
+                }
+            }
+        )
+        colorPickerFor = null;
+    }
 </script>
 
 <svelte:head>
@@ -293,9 +287,9 @@
             </nav>
             <nav>
                 <div style="margin:auto;">
-                    {#if Object.keys(colorByGear).length}Show: {/if}
-                    {#each Object.keys(colorByGear) as gearColorId}
-                    <span style={`color:${colorByGear[gearColorId]}`}>
+                    <!-- Let's pick ride types... -->
+                    {#each Object.keys(gearOrTypeToShowList) as gearColorId}
+                    <span style={`color:${getColorForGear(gearColorId)}`} on:click={showColorPicker(gearColorId)}>
                         <input type="checkbox" bind:checked={gearOrTypeToShowList[gearColorId]}>
                         {athlete && getBike(gearColorId,athlete)?.name || gearColorId}</span>
                     <span>  </span>
@@ -303,8 +297,18 @@
                 </div>
             </nav>
     </div>
+    {#if colorPickerFor}
+        <div class="modal">
+            <span>Change Color for {athlete && getBike(colorPickerFor,athlete)?.name || colorPickerFor}:</span> 
+                <input type="color" style="width:1em" value={getColorForGear(colorPickerFor)}
+                on:change={(e)=>setGearColor(e.target.value)}>
+            <button on:click={hideColorPicker}>Cancel</button>
+        </div>
+    {/if}
     <div class="mapwrap">
         <div class="overlay">
+            <button on:click={()=>map.setZoom(map.getZoom()+1)}>+</button>
+            <button on:click={()=>map.setZoom(map.getZoom()-1)}>-</button>
             {#if start && start[0] == tlat && start[1] == tlon}
                 Drag marker around the map to search for activities
             {:else}
@@ -318,18 +322,26 @@
 <h3>{hits.length} Results</h3>
 <table id="results">
     {#each hits as activity (activity.id)}
-        <Activity chooser={false} {athlete} {activity} color={layers[activity.id]?.paint['line-color']}> 
+    {#if layers[activity.id]?.paint}
+        <Activity chooser={false} {athlete} {activity} color={layers[activity.id].paint['line-color']}> 
             <div class="colorChooser">
                 <span style={`color:${layers[activity.id].paint['line-color']}`}>Change Color: </span> 
                 <input type="color" style="width:1em" value={layers[activity.id].paint['line-color']}
                 on:change={(e)=>updateActivityColor(activity,e.target.value)}>
-                    {#each [defaultColor,...gearColors.slice(gearColorIndex)] as color}
+                    {#each getColors() as color}
                         <button on:click={()=>updateActivityColor(activity,color)}
                             style={`width:1em;background-color:${color}`}></button>
                     {/each}               
                 <button on:click={updateActivityColor(activity,undefined)}>&times;</button>
             </div>           
         </Activity>
+    {:else}
+        <tr>
+            What is up with {activity.id}??? ({activity.name})
+            Layer info: {JSON.stringify(layers[activity.id])}
+            
+        </tr>
+    {/if}
     {/each}
 </table>
 
@@ -401,5 +413,10 @@
         margin-bottom: 0;
         margin-top: 0;
         margin-left: 3px;
+    }
+    .overlay button {
+        border-radius: 50%;
+        width: 2em;
+        height: 2em;
     }
 </style>
