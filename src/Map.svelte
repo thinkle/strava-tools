@@ -4,17 +4,18 @@ import MapboxGL from 'mapbox-gl';
 import {distance} from './geometry.js';
 export let polyline
 export let color='#ff3e00'
-
-let coordinates = [];
+export let coordinates = [];
 let mapDiv;
 let showMap = false;
 const token = 'MAPBOX_TOKEN'
 let coordinateData = {}
 $: {
-    if (polyline) {
+    if (polyline && !coordinates.length) {
         coordinates = Polyline.decode(polyline);
-        coordinateData  = findMetadata(coordinates);
     }
+}
+$: {
+        coordinateData  = findMetadata(coordinates);   
 }
 $: {
     if (mapDiv && coordinateData.clat) {

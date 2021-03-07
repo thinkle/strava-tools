@@ -27,3 +27,17 @@ export async function getAthlete () {
         );
     return await response.json();   
 }
+
+export async function getLatLngStream (activity) {
+    // $ http GET "https://www.strava.com/api/v3/activities/{id}/streams?keys=&key_by_type=" "Authorization: Bearer [[token]]"
+    let response = await fetch(
+        //$ http GET "https://www.strava.com/api/v3/athlete" "Authorization: Bearer [[token]]"
+            `https://www.strava.com/api/v3/activities/${activity.id}/streams?keys=latlng,grade_smooth,watts,heartrate,velocity_smooth,distance&keys_by_type=false`,
+            {
+                headers: {
+                    Authorization: "Bearer " + get(token).access_token,
+                },
+            }
+        );
+    return await response.json();   
+}

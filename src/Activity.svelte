@@ -4,9 +4,11 @@
     export let color=undefined
     export let onlyShowMismatches=undefined
     export let chooser=true
+    export let updateCallback = ()=>{}
     import {token,bikeSettings} from './stores'
     import {pickBike,getBike} from './bikePicker.js';
     import Map from './Map.svelte';
+    import {getLatLngStream} from './strava'
     let defaultBike = athlete && athlete.bikes && athlete.bikes.find((bike)=>bike.primary)
     let showOthers = true;
 
@@ -51,6 +53,17 @@
             console.log(activity.id,'Got bike, chooser',currentBike,'==',ruleBasedBike,'wrong?',wrongBike)
         }
     }
+    let stream
+    async function getStream () {
+        console.log('get stream for ...',activity)
+        stream = await getLatLngStream(activity);
+        console.log('Got stream!',stream);
+        activity.coordinates = stream.find((s)=>s.type=='latlng').data;
+        activity.detailed = true;
+        console.log('Updated activity coordinates:',activity)
+        updateCallback(activity)
+    }
+
 </script>
 {#if !onlyShowMismatches || wrongBike }
 <tr class="activity" class:wrongBike>
@@ -125,13 +138,26 @@
         <div  class='map'>
             <Map 
             {color}
+            coordinates={activity && activity.coordinates}
             polyline={activity && activity.map && activity.map.summary_polyline}/> 
         </div>
+        {#if !activity.detailed}<button on:click={getStream}>Get detailed coordinates</button>{/if}
+        <span class='small'>(Using {JSON.stringify(activity.coordinates.length)} coordinates)</span>
     </td>
+</tr>
+<tr>
+  
 </tr>
 {/if}
 <style>
-    
+    .end button {
+        font-size: small;
+        display: block;
+        
+    }
+    .small {
+        font-size: x-small;
+    }
     a {
         color: black;
         font-weight: bold;

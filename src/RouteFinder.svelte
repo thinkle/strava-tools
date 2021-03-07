@@ -21,6 +21,14 @@
     let first;
     let last;
 
+    function getSourceID (activity) {
+        if (activity.detailed) {
+            return activity.id + 'DET';
+        } else {
+            return activity.id;
+        }
+    }
+
     onMount(async () => {
         lastActivities = await getActivities(1, 15);
         if (activities.length==0) {
@@ -109,8 +117,10 @@
     let hits = [];
     let sources = [];
     let activeSources = [];
+    let updateNow = 1
     $: {
-        if (map && mapReady && activities.length && metersWithin) {
+        if (map && mapReady && activities.length && metersWithin && updateNow) {
+            updateNow += 1;
             console.log('Re-check hits etc.')
             hits = activities.filter((activity) => {
                 for (let key in gearOrTypeToShowList) {
@@ -121,8 +131,14 @@
                     }
                 }
                 if (activity.map && activity.map.summary_polyline) {
-                    let coords = Polyline.decode(activity.map.summary_polyline);
-                    activity.coordinates = coords;
+                    let coords
+                    if (!activity.coordinates || activity.coordinates.length == 0) {
+                        coords = Polyline.decode(activity.map.summary_polyline);
+                        activity.coordinates = coords;
+                    } else {
+                        console.log('Use coordinates!');
+                        coords = activity.coordinates;
+                    }
                     for (let n=1; n<coords.length; n++) {
                         let c1 = coords[n-1]
                         let c2 = coords[n]
@@ -169,9 +185,9 @@
             hitsForLayers.forEach((hit) => {
                 if (hit.type && gearOrTypeToShowList[hit.type]===undefined) {gearOrTypeToShowList[hit.type] = true;}
                 if (hit.gear_id && gearOrTypeToShowList[hit.gear_id]===undefined) {gearOrTypeToShowList[hit.gear_id] = true;}
-                if (sources.indexOf(hit.id) == -1) {
-                    if (!map.getSource(hit.id)) {
-                        map.addSource(`${hit.id}`, {
+                if (sources.indexOf(getSourceID(hit)) == -1) {
+                    if (!map.getSource(getSourceID(hit))) {
+                        map.addSource(`${getSourceID(hit)}`, {
                             type: "geojson",
                             data: {
                                 type: "Feature",
@@ -185,14 +201,14 @@
                             },
                         });
                     }
-                    sources.push(hit.id);
+                    sources.push(getSourceID(hit));
 
                     try {
-                        if (!layers[hit.id]) {
-                            layers[hit.id] = {
-                                id: "" + hit.id,
+                        if (!layers[getSourceID(hit)]) {
+                            layers[getSourceID(hit)] = {
+                                id: "" + getSourceID(hit),
                                 type: "line",
-                                source: "" + hit.id,
+                                source: "" + getSourceID(hit),
                                 layout: {
                                     "line-join": "round",
                                     "line-cap": "round",
@@ -203,7 +219,7 @@
                                 },
                             }
                         }
-                        map.addLayer(layers[hit.id]);  
+                        map.addLayer(layers[getSourceID(hit)]);  
                     } catch (err) {
                         console.log("Error adding layer to map", err);
                     }
@@ -213,9 +229,9 @@
     }
 
     function updateActivityColor (activity, color) {
-        layers[activity.id].paint['line-color'] = color;
-        map.moveLayer(activity.id)
-        customSorts[activity.id] = customSortCount
+        layers[getSourceID(activity)].paint['line-color'] = color;
+        map.moveLayer(getSourceID(activity))
+        customSorts[getSourceID(activity)] = customSortCount
         customSortCount += 1;
     }
     let customSortCount = 1;
@@ -323,7 +339,13 @@
 <table id="results">
     {#each hits as activity (activity.id)}
     {#if layers[activity.id]?.paint}
-        <Activity chooser={false} {athlete} {activity} color={layers[activity.id].paint['line-color']}> 
+        <Activity 
+            chooser={false} 
+            {athlete} 
+            {activity} 
+            color={layers[activity.id].paint['line-color']}
+            updateCallback={(a)=>{updateNow+=1}}
+            > 
             <div class="colorChooser">
                 <span style={`color:${layers[activity.id].paint['line-color']}`}>Change Color: </span> 
                 <input type="color" style="width:1em" value={layers[activity.id].paint['line-color']}
