@@ -138,10 +138,12 @@
 
 </script>
 <div>
+  <div class="top">
   <h3>Total Outdoor Time</h3>
   <div> 
     From<input type="datetime-local" bind:value={start}>  
     to <input type="datetime-local" bind:value={end}>
+  </div>
   </div>
   <div class="fetchingNotification" class:active={fetching}>
     Fetching more activities from Strava...
@@ -185,7 +187,7 @@
     />
     <tr>
       <th colspan="6" on:click={()=>showByType=!showByType}>
-        By type ({#if showByType}hide{:else}hide{/if})
+        By type ({#if showByType}hide{:else}show{/if})
       </th>
     </tr>
     {#if showByType}
@@ -206,7 +208,7 @@
     {/if}
     <tr>
       <th colspan="6" on:click={()=>showByGear=!showByGear}>
-        By gear ({#if showByGear}hide{:else}hide{/if})
+        By gear ({#if showByGear}hide{:else}show{/if})
       </th>
     </tr>
     {#if showByGear}
@@ -230,13 +232,24 @@
     {/if}
   </table>
 
-  <div>
-
+  <div class="spacer">
+    This space intentionally left blank.
   </div>
 </div>
 
 <style>
-  
+  .spacer {
+    height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    font-family:'Courier New', Courier, monospace;
+  }
+  .top {
+    background-color: white;
+    position: sticky;
+    top: 0;
+  }
   th {
     background-color: #d7d7d7;
     color: #333;
