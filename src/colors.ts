@@ -15,7 +15,7 @@ let gearColors = [
 let gearColorIndex = 0;
 let colorByGear = {}
 export function getColorForGear (id) {
-    console.log('Get color for ',id)
+    //console.log('Get color for ',id)
     if (customColors[id]) {
         return customColors[id];
     }
@@ -33,10 +33,16 @@ export function getColors () {
 }
 
 let storedCustomColors = localStorage.getItem('customColors');
-let customColors = {}
+let customColors = {
+    'Ride':'#fe7f2d',
+    'Walk':'#a09abc',
+    'Hike':'#2176ae',
+    'NordicSki':'pink',
+}
 if (storedCustomColors) {
     try {
-        customColors = JSON.parse(storedCustomColors);
+        customColors = {...customColors,
+            ...JSON.parse(storedCustomColors)};
     } catch (err) {
         console.log('Bad custom colors?',storedCustomColors)
     }

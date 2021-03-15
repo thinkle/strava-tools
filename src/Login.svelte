@@ -1,6 +1,7 @@
 <script>
     import Config from "./Config.svelte";
     import RouteFinder from './RouteFinder.svelte';
+    import TimeTally from './TimeTally.svelte';
     import { token,scope } from "./stores";
     export let onSelectCallback = ()=>{}
     const clientID = STRAVA_CLIENT_ID;
@@ -81,6 +82,7 @@
     }
     const BIKE = 'bikematcher';
     const FIND = 'routefinder';
+    const TIME = 'timetally'
 
     function setMode (newMode) {
         console.log('setMode',newMode)
@@ -95,13 +97,17 @@
             <button class:active={mode==BIKE} on:click={()=>setMode(BIKE)}>Set bikes for rides</button>        
         {/if}
         {#if $scope.indexOf('activity:read')>-1}
-            <button class:active={mode==FIND} on:click={()=>setMode(FIND)}>Find route by location</button>       
+            <button class:active={mode==FIND} on:click={()=>setMode(FIND)}>Find route by location</button>
+            <button class:active={mode==TIME} on:click={()=>setMode(TIME)}>Tally Time Outside</button>       
         {/if}
+        
         <button class="out" on:click={clearToken}>Log out</button>
         {#if mode==BIKE}
             <Config/>
         {:else if mode==FIND}
             <RouteFinder/>
+        {:else if mode==TIME}
+            <TimeTally/>
         {/if}
     {:else if !$token}
         <h3>Log In</h3>

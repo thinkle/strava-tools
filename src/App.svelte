@@ -36,6 +36,10 @@
 	{#if faq}
 		<div class='modalBackground' on:click={()=>faq=false}>
 			<div class='modal' on:click={(e)=>e.stopPropagation()}>
+				<button
+					style="position: fixed; top: 5px; right: 5px;"
+					on:click={()=>{faq=false}}>❌</button>
+
 				<dl>
 					<dt>
 						What data are you collecting about me?

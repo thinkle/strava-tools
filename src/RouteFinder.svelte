@@ -3,6 +3,7 @@
     import Polyline from "@mapbox/polyline";
     import MapboxGL from "mapbox-gl";
     import Activity from "./Activity.svelte";
+    import ColorPicker from './ColorPicker.svelte';
     import { getActivities, getAthlete } from "./strava.ts";
     import { distance, closestBetween } from "./geometry.js";
     import {getBike} from './bikePicker';
@@ -239,15 +240,8 @@
 
     let gearOrTypeToShowList = {}; // gear ID or activity type to filter out of list...
 
-    function showColorPicker (id) {
-        colorPickerFor = id;
-    }
-    function hideColorPicker () {
-        colorPickerFor = null;
-    }
-    let colorPickerFor
-    function setGearColor (color) {
-        let oldColor = getColorForGear(colorPickerFor)
+    
+    function setColorCallback (colorPickerFor,color,oldColor) {
         setCustomColor(colorPickerFor,color);
         activities.map(
             (activity) => {
@@ -259,7 +253,6 @@
                 }
             }
         )
-        colorPickerFor = null;
     }
 </script>
 
@@ -305,22 +298,19 @@
                 <div style="margin:auto;">
                     <!-- Let's pick ride types... -->
                     {#each Object.keys(gearOrTypeToShowList) as gearColorId}
-                    <span style={`color:${getColorForGear(gearColorId)}`} on:click={showColorPicker(gearColorId)}>
+                    <span style="display:inline-flex; margin-right: 1em; align-items: center">
+                        <ColorPicker colorId={gearColorId} {athlete}
+                            {setColorCallback}
+                        >
+                        </ColorPicker>
                         <input type="checkbox" bind:checked={gearOrTypeToShowList[gearColorId]}>
-                        {athlete && getBike(gearColorId,athlete)?.name || gearColorId}</span>
+                    </span>
                     <span>  </span>
                     {/each}
                 </div>
             </nav>
     </div>
-    {#if colorPickerFor}
-        <div class="modal">
-            <span>Change Color for {athlete && getBike(colorPickerFor,athlete)?.name || colorPickerFor}:</span> 
-                <input type="color" style="width:1em" value={getColorForGear(colorPickerFor)}
-                on:change={(e)=>setGearColor(e.target.value)}>
-            <button on:click={hideColorPicker}>Cancel</button>
-        </div>
-    {/if}
+    
     <div class="mapwrap">
         <div class="overlay">
             <button on:click={()=>map.setZoom(map.getZoom()+1)}>+</button>

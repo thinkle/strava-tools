@@ -10,7 +10,7 @@ let showMap = false;
 const token = 'MAPBOX_TOKEN'
 let coordinateData = {}
 $: {
-    if (polyline && !coordinates.length) {
+    if (polyline && !coordinates?.length) {
         coordinates = Polyline.decode(polyline);
     }
 }
@@ -60,6 +60,8 @@ $: {
 }
 
 function findMetadata (coordinates) {
+    if (!coordinates.length) {return}
+    if (!coordinates[0]) {return}
     let clat = coordinates[0][0];
     let clon = coordinates[0][1];
     let minLat = clat
