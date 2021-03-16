@@ -1,19 +1,32 @@
 <script>
+    import {Router,Link,Route, navigate} from 'svelte-routing';
+    import { globalHistory } from 'svelte-routing/src/history';
     import Config from "./Config.svelte";
     import RouteFinder from './RouteFinder.svelte';
     import TimeTally from './TimeTally.svelte';
-    import { token,scope } from "./stores";
+    import { token,scope,currentPath } from "./stores";
     export let onSelectCallback = ()=>{}
     const clientID = STRAVA_CLIENT_ID;
     const netlify_uri = "NETLIFY_URL";
     const scopes = "activity:write,profile:read_all,activity:read_all";
     const roScopes = 'activity:read_all,profile:read_all';
-    const loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${scopes}`;
-    const roLoginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}/&approval_prompt=force&scope=${roScopes}`;
+    const loginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}${$currentPath}&approval_prompt=force&scope=${scopes}`;
+    const roLoginUri = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${netlify_uri}${$currentPath}&approval_prompt=force&scope=${roScopes}`;
     let loginCode = new URLSearchParams(location.search).get("code");
     let authenticated;
     let mode;
+    export let url;
+    import { onMount, onDestroy } from 'svelte';
     console.log("TOKEN:", $token, 'Scope',$scope);
+    let unsub;
+    // keep reference to global path...
+    onMount(()=>{
+        unsub = globalHistory.listen(({location,action})=>{
+            $currentPath = location.pathname
+        })
+    })
+    onDestroy(()=>unsub())
+    $: mode = $currentPath.substr(1)
 
     if ($token) {
         if ($token.expires_at < new Date().getTime() / 1000) {
@@ -71,7 +84,7 @@
         localStorage.setItem('loginUri',location.search)
         $scope = new URLSearchParams(location.search).get("scope")
         localStorage.setItem('scope',$scope);
-        history.pushState({}, null, "/");
+        navigate($currentPath.replace(/[?].*/,''));
     }
 
     function clearToken() {
@@ -90,25 +103,21 @@
         mode = newMode;
     }
 </script>
-
+<Router url={url}>
 <div class:intro={!mode}>
     {#if authenticated && $scope}    
         {#if $scope.indexOf('activity:write')>-1}
-            <button class:active={mode==BIKE} on:click={()=>setMode(BIKE)}>Set bikes for rides</button>        
+            <button class:active={mode==BIKE} on:click={()=>navigate('/bikechooser')}>Set bikes for rides</button>        
         {/if}
         {#if $scope.indexOf('activity:read')>-1}
-            <button class:active={mode==FIND} on:click={()=>setMode(FIND)}>Find route by location</button>
-            <button class:active={mode==TIME} on:click={()=>setMode(TIME)}>Tally Time Outside</button>       
+            <button class:active={mode==FIND} on:click={()=>navigate('/haystack')}>Find route by location</button>
+            <button class:active={mode==TIME} on:click={()=>navigate('/time')}>Tally Time Outside</button>       
         {/if}
         
         <button class="out" on:click={clearToken}>Log out</button>
-        {#if mode==BIKE}
-            <Config/>
-        {:else if mode==FIND}
-            <RouteFinder/>
-        {:else if mode==TIME}
-            <TimeTally/>
-        {/if}
+        <Route path="bikechooser" component={Config}/>
+        <Route path="haystack" component={RouteFinder}/>
+        <Route path="time" component={TimeTally}/>
     {:else if !$token}
         <h3>Log In</h3>
         <br>Read/Write (for bike chooser tool + find-myroute):
@@ -127,7 +136,7 @@
 
     {/if}
 </div>
-
+</Router>
 <style>
     .stravalogin {
         height: 48px;

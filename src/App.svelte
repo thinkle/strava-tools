@@ -1,22 +1,50 @@
 <script>
+	import {Router,Link,Route} from 'svelte-routing';
 	import Login from './Login.svelte'
 	let faq
-	let showInfo = true;
-	import {scope} from './stores';
+	let showInfo = false;
+	import {scope,currentPath} from './stores';
+	export let url;
+	let atIndex = true;
+	$: atIndex = $currentPath == '/'
 </script>
 
 <main>
-	<h1>Tom's Cycling Tools {#if !showInfo}
-		<button on:click={()=>{showInfo=true}}>i</button>
-		{/if}</h1>
+	<h1>
+		{#if $currentPath.indexOf('haystack')>-1}
+			Haystack Tool
+			<span class="sub">Can't remember how you got 
+				to that spot? 
+				Search your Strava history using a map
+			</span>
+		{:else if $currentPath.indexOf('time')>-1}
+			Time Tally Tool
+			<span class="sub">
+				Tally up your time spent outside, by activity
+				or by bike.
+			</span>
+		{:else if $currentPath.indexOf('bike')>-1}
+			Bike Chooser
+			<span class="sub">
+				See which bike you have for which ride.
+			</span>
+		{/if}
+		<span class:badge={!atIndex}>Tom's Cycling Tools</span> 
+		{#if !showInfo}
+			<button on:click={()=>{showInfo=true}}>i</button>
+		{/if}
+	</h1>
 	<img class='stravaBranding' src="api_logo_pwrdBy_strava_horiz_gray.svg" alt="Powered by Strava">
 	
 	{#if showInfo}
 	<section>
 		<h3>About</h3>
+		{#if $currentPath=='/' || $currentPath.indexOf('haystack')>-1}
 		<p><b>Route Finder:</b> Drag location to a spot on the map, pick a threshhold, find the route
 			that goes directly by that spot.
 		</p>
+		{/if}
+		{#if $currentPath=='/' || $currentPath.indexOf('bikechooser')>-1}
 		<p><b>Bike Setter</b>: change which bike is associated with which ride. You can set up rules to 
 			have different defaults for virtual/real rides, or 
 			by speed or temperature. Right now, that just color-codes and makes it a bit quicker to change bikes to
@@ -28,11 +56,22 @@
 			</b>
 			{/if}
 		</p>
+		{/if}
+		{#if $currentPath=='/' || $currentPath.indexOf('time')>-1}
+		<p><b>Time Tally</b>: I build this tool to help track
+			how many hours I've spent outside as my family has been
+			working on <a href="https://www.1000hoursoutside.com/">1,000 
+			hours outside</a>.</p>
+			<p>The tool also will let you track hours you've spent in each
+				activity type and on each bike (or, presumably, pair
+				of shoes? I don't know &mdash; I'm not a runner!).
+		</p>
+		{/if}
 		<p><a href='#' on:click={()=>faq=true}>FAQ</a></p>
 		<button on:click={()=>{showInfo=false}}>❌</button>
 	</section>
 	{/if}
-	<Login onSelectCallback={()=>{showInfo=false}}/>
+	<Login {url} onSelectCallback={()=>{showInfo=false}}/>
 	{#if faq}
 		<div class='modalBackground' on:click={()=>faq=false}>
 			<div class='modal' on:click={(e)=>e.stopPropagation()}>
@@ -58,22 +97,6 @@
 							to limit how much I can use their service.
 						</p>
 					</dd>
-					<dt>What plans do you have for the future?</dt>
-					<dd>
-						<p>
-						I may try to automate the bike chooser. If I do, that would mean I would have to start 
-						storing your token, which gives me more access to your data. I would then use that to
-						check for rides that need to be updated and update them without you doing anything.
-						</p>
-						<p>
-							For the map finder, I may eventually bring in higher resolution data. Right now I'm just using
-							a "compressed" version of your route that comes with every ride on the default data strava
-							provides. In my experience, I don't notice the routes looking too inaccurate until they get
-							really long (I did a triple metric and on that route, you can definitely see that the
-							route data is lower resolution than it should be).
-						</p>
-					</dd>
-					
 					<dt>Can I support you?</dt>
 					<dd>
 						Sure! Buy me a coffee, or a nice pastry for my next ride,
@@ -84,6 +107,16 @@
 							<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
 							</form>
 					</dd>
+					<dt>What plans do you have for the future?</dt>
+					<dd>
+						<p>
+						I may try to automate the bike chooser. If I do, that would mean I would have to start 
+						using webhooks, which would mean Strava pings my app every time you post a new activity. I 
+						would also have to store information about your bike settings so that I could update 
+						them without you doing anything.
+						</p>
+					</dd>
+					
 				</dl>
 			</div>
 		</div>
@@ -106,6 +139,28 @@
 		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
+		position: relative;
+		margin-top: 15px;
+		margin-bottom: 17px;
+	}
+	h1 .sub {
+		position: absolute;
+		bottom: -15px;
+		left: 0;
+		display: block;
+		width: 100%;
+		text-align: center;
+		font-size: 15px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	h1 .badge {
+		position: absolute;
+		top: -10px;
+		right: 0;
+		text-align: right;
+		font-size: 15px;
 	}
 
 	@media (min-width: 640px) {
@@ -175,6 +230,10 @@
 	}
 	dl p {
 		margin-bottom: 1rem;
+	}
+
+	.badge {
+		font-size: xx-small;
 	}
 
 </style>

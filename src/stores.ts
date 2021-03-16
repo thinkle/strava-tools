@@ -23,6 +23,6 @@ if (initialBikeSettings) {
     initialBikeSettings = []
 }
 
-
+export const currentPath = writable(window.location.pathname);
 
 export const bikeSettings = writable(initialBikeSettings)

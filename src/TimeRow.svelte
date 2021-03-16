@@ -141,4 +141,11 @@ let hoverMode=true;
   rect:hover {
     fill : red
   }
+  @media (max-width: 500px) {
+    tr {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
 </style>
