@@ -6,7 +6,7 @@ if (stored) {
     console.log('using parsed token!');
 }
 export const token = writable(initialValue);
-
+export const authenticated = writable(false);
 let storedScope = localStorage.getItem('scope');
 export const scope = writable(storedScope);
 

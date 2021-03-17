@@ -29,10 +29,12 @@
 				See which bike you have for which ride.
 			</span>
 		{/if}
-		<span class:badge={!atIndex}>Tom's Cycling Tools</span> 
-		{#if !showInfo}
-			<button on:click={()=>{showInfo=true}}>i</button>
-		{/if}
+		<span class:badge={!atIndex} on:click={()=>{showInfo=true}}>Tom's Cycling Tools
+			{#if !showInfo}
+			<button class="fader">i</button>
+			{/if}
+		</span> 
+		
 	</h1>
 	<img class='stravaBranding' src="api_logo_pwrdBy_strava_horiz_gray.svg" alt="Powered by Strava">
 	
@@ -91,7 +93,7 @@
 						<p>Your routes and profile info go straight from strava to your browser. I don't actually ever
 							see them.
 						</p>
-						<p>I don't even store the magic token that allows access on my server: you store it in your browser.</p>							So, your browser is doing all the work and requesting data directly from strava. The
+						<p>I don't even store the magic token that allows access on my server: you store it in your browser.</p>													
 						<p>The only request you make that goes to my server is the request to get the token from strava,
 							which has to go through me so that I don't expose my API key, which is what strava uses
 							to limit how much I can use their service.
@@ -103,7 +105,12 @@
 						by pitching in at my paypal link.
 						<form action="https://www.paypal.com/donate" method="post" target="_top">
 							<input type="hidden" name="hosted_button_id" value="JGAY7MS9ASP5A" />
-							<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+							<input
+							 type="image" 
+							 src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" 
+							 border="0" 
+							 name="submit" 
+							 title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
 							<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
 							</form>
 					</dd>

@@ -144,6 +144,11 @@
     From<input type="datetime-local" bind:value={start}>  
     to <input type="datetime-local" bind:value={end}>
   </div>
+  {#if start > end} 
+  <div class="warning">
+    Oops! Your start date is after your end date!
+  </div>
+  {/if}
   </div>
   <div class="fetchingNotification" class:active={fetching}>
     Fetching more activities from Strava...
@@ -291,14 +296,23 @@
     width: 150px;
     box-sizing: border-box;
     padding: 1em;
-    background-color: #22222266;
-    color: #eee;
+    background-color: #222222aa;
+    color: #fcc;
     text-align: center;
-    animate: opacity 300ms;
+    transition: opacity 300ms;
     opacity: 0;
     pointer-events: none;
   }
   .fetchingNotification.active {
     opacity: 1;
+  }
+  .warning {
+    position: absolute;
+    bottom: 1;
+    background-color: yellow;
+    color: #f22;
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
   }
 </style>
