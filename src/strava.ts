@@ -1,4 +1,4 @@
-import {token, authenticated} from './stores';
+import {token, authenticated } from './stores';
 import { get } from 'svelte/store';
 
 
@@ -12,7 +12,7 @@ export async function checkAuthentication () {
                 new Date().getTime() / 1000 - $token.expires_at,
                 "seconds ago"
             );
-            await refreshToken($token);
+            await refreshToken();
             return true;
         } else {
             console.log('Token is good to go!')
@@ -24,7 +24,8 @@ export async function checkAuthentication () {
     }
 }
 
-export async function refreshToken() {    
+export async function refreshToken() {
+    const uri = "/.netlify/functions/api";    
     console.log("Refreshing token");
     let response = await fetch(uri, {
         method: "POST",
