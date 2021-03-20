@@ -55,12 +55,18 @@ function modifyFetcherForRedundancy(currentParams : ActivityFetcherParams,$fetch
             ...currentParams,
             ...updates
           }
+          // Let's just treat the "0" option for the future like a time in the future to make
+          // all of our comparisons below just work...
+          const theFuture = 2 * (new Date().getTime()/1000);
+          if (current.before==0) {current.before = theFuture}
+          if (old.before==0) {old.before = theFuture}
           // We look for three types of overlap...
           if (old.after <= current.after && old.before >= current.before) {
             // 1. Contained
             // [less] old.after                                   old.before   [more]
             //               current.after      current.before
-            //console.log("~F~ Opt 1 (contained) by",logF(old),logF(fetcherParams))
+            console.log("~F~ Opt 1 (contained) by",logF(old),logF(fetcherParams))
+            console.log('~F: ',old.after, current.after, old.before, current.before);
             updates.complete = true;
           } else if (
             current.after <= old.after 
@@ -71,7 +77,7 @@ function modifyFetcherForRedundancy(currentParams : ActivityFetcherParams,$fetch
             // [less]                       old.after                       old.before   [more]
             //           current.after                 current.before  
             //           [fetch this...     ]     
-            //console.log("~F~ Opt 2",logF(old),logF(fetcherParams))
+            console.log("~F~ Opt 2",logF(old),logF(fetcherParams))
             updates.before = old.after;   
         } else if (
           old.after <= current.after 
@@ -82,8 +88,13 @@ function modifyFetcherForRedundancy(currentParams : ActivityFetcherParams,$fetch
             // [less]        old.after                       old.before                [more]
             //                          current.after                    current.before  
             //                                                   [fetch this...     ]    
-          //console.log("~F~ Opt 3",logF(old),logF(fetcherParams))
+          console.log("~F~ Opt 3",logF(old),logF(fetcherParams))
           updates.after = old.before;
+        }
+        // Set timestamp back from theFuture to 0 so we make request to strava API for no limit
+        // as opposed to a weird future limit...
+        if (updates.before == theFuture) {
+          updates.before = 0;
         }
       }
     });
@@ -149,7 +160,7 @@ async function prepopulateActivities (fetcher : ActivityFetcherParams, $activiti
   } else {
     $activitiesById.forEach((activity,key)=>{
       let stamp = new Date(activity.start_date).getTime()/1000;
-      if (fetcher.before && stamp < fetcher.before) {
+      if (!fetcher.before || (stamp < fetcher.before)) {
         if (stamp > fetcher.after) {
           fetcher.activities.add(key);
         }
@@ -164,7 +175,8 @@ export const activityFetcher = derived(
   ([$fetchersByDate,$activitiesById,$startDate,$endDate])=>{ 
     let startStamp = $startDate && $startDate.getTime()/1000 || 0;
     let endStamp = $endDate && $endDate.getTime()/1000 || 0;
-    if (startStamp > endStamp) {
+    if (endStamp && startStamp > endStamp) {
+      console.log('~FF no go');
       return {
           broken:true, 
           activities : () => [], 
@@ -185,11 +197,11 @@ export const activityFetcher = derived(
               complete : false,
               activities : new Set()
             }
-            //console.log('Create new fetcher is:',logF(fetchParams),JSON.parse(JSON.stringify(fetchParams)))
+            console.log('~FF Create new fetcher is:',logF(fetchParams),JSON.parse(JSON.stringify(fetchParams)))
             // Pre-populate fetcher...
             prepopulateActivities(fetchParams,$activitiesById);
             fetchParams = modifyFetcherForRedundancy(fetchParams,$fetchersByDate)
-            //console.log('Modified params:',logF(fetchParams),fetchParams)
+            console.log('~FF Modified params:',logF(fetchParams),fetchParams)
             fetchersByDate.update(
               ($f)=>{
                 $f.set(currentFetcher.dateIndex,fetchParams);  

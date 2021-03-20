@@ -1,4 +1,5 @@
 <script type="typescript">
+  import DatePicker from './DatePicker.svelte';
   import TimeRow from './TimeRow.svelte';
   import ColorPicker from './ColorPicker.svelte';
   import Activity from './Activity.svelte';
@@ -21,13 +22,6 @@
   onMount(async ()=>{
      athlete = await getAthlete()
   });
-  $endDate = new Date()
-  let end = $endDate.toISOString().slice(0,16);
-  $startDate = new Date($endDate.getFullYear(),$endDate.getMonth(),1,0)
-  let start = $startDate.toISOString().slice(0,16);
-
-  $: $startDate = new Date(start) // react to string changes
-  $: $endDate = new Date(end) // react to string changes
 
   let totalTime
   let activities = [];
@@ -46,40 +40,6 @@
     return s + ' seconds'
   }
 
-  async function getActivitiesUntil (date,forceFetch=false) {
-    if (fetching) {
-      console.log('Oops -- tried to call getActivitiesUntil while still fetching????')
-      return;
-    }
-    console.log('Calling getActivitiesUntil',date)
-    if (!allActivities.length || forceFetch) { // || allActivities[0])
-      fetching = true;
-      let newActivities = await getActivities(page,50);
-      page += 1;
-      fetching = false;
-      allActivities = [...allActivities,...newActivities];
-    }
-    if (allActivities.length) {
-      let first=allActivities[0].start_date_local;
-      let last=first;
-      for (let a of allActivities) {
-        if (a.start_date_local < first) {
-          first = a.start_date_local;
-        }
-        if (a.start_date_local > last) {
-          last = a.start_date_local;
-        }
-      }
-      let firstDate = new Date(first);
-      let lastDate = new Date(last);
-      if (firstDate > $startDate) {
-        console.log('We need more activities!');
-        getActivitiesUntil($startDate,true);
-      }
-    }
-  }
-
-
   $: {
     if (!fetching && !$activityFetcher.getFetcher().complete) {
       async function update () {
@@ -90,18 +50,7 @@
       update();
     }
   }
-  //$: getActivitiesUntil(startDate);
-  /*$: activities = allActivities.filter(
-    (a)=>{
-      if (!a.start_date_local) {return false}
-      let d = new Date(a.start_date_local)
-      if (d > startDate && d < endDate) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  ) */
+  
   $: {
     byTypeMap = {};
     byGearMap = {};
@@ -153,15 +102,7 @@
 <div>
   <div class="top">
   <h3>Total Outdoor Time</h3>
-  <div> 
-    From<input type="datetime-local" bind:value={start}>  
-    to <input type="datetime-local" bind:value={end}>
-  </div>
-  {#if start > end} 
-  <div class="warning">
-    Oops! Your start date is after your end date!
-  </div>
-  {/if}
+  <div style="margin:auto"><DatePicker></DatePicker></div>
   </div>
   <div class="fetchingNotification" class:active={fetching}>
     Fetching more activities from Strava...
@@ -319,13 +260,5 @@
   .fetchingNotification.active {
     opacity: 1;
   }
-  .warning {
-    position: absolute;
-    bottom: 1;
-    background-color: yellow;
-    color: #f22;
-    width: 100%;
-    text-align: center;
-    padding: 1rem;
-  }
+ 
 </style>

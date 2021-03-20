@@ -4,6 +4,7 @@
     import MapboxGL from "mapbox-gl";
     import Activity from "./Activity.svelte";
     import ColorPicker from './ColorPicker.svelte';
+    import DatePicker from './DatePicker.svelte';
     import { getActivities, getAthlete } from "./strava.ts";
     import { distance, closestBetween } from "./geometry.js";
     import {getBike} from './bikePicker';
@@ -11,6 +12,7 @@
     import {startDate,endDate,activityFetcher} from './activityStore';
     $startDate = 0;
     $endDate = 0;
+    let dateMode = false;
     let athlete
     async function load () {athlete = await getAthlete();}
     load();
@@ -296,7 +298,11 @@
             <div class='searchingInfo'>Searching {activities.length} activities
                 {#if first}from {first} to {last}{/if}
             </div>
-            <div>         
+            <input type="checkbox" bind:checked={dateMode}>Advanced
+            <div>   
+                {#if $activityFetcher.getFetcher().complete} 
+                    Got 'em all!
+                {:else}     
                 <button 
                     disabled={loading} 
                     on:click={()=>loadMoreActivities()}
@@ -308,6 +314,7 @@
                         &nbsp;{#if activities.length}more{:else}activities{/if}
                     {/if}
                 </button>
+                {/if}
             </div>
             </nav>
             <nav>
@@ -324,7 +331,13 @@
                     <span>  </span>
                     {/each}
                 </div>
+                {#if dateMode}
+                <div style="margin-left: auto">
+                    <DatePicker autoUpdate=false/>
+                </div>
+                {/if}
             </nav>
+
     </div>
     
     <div class="mapwrap">
