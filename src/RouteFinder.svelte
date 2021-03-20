@@ -8,6 +8,9 @@
     import { distance, closestBetween } from "./geometry.js";
     import {getBike} from './bikePicker';
     import {getColorForGear,getColors,setCustomColor} from './colors';
+    import {startDate,endDate,activityFetcher} from './activityStore';
+    $startDate = 0;
+    $endDate = 0;
     let athlete
     async function load () {athlete = await getAthlete();}
     load();
@@ -31,14 +34,14 @@
     }
 
     onMount(async () => {
-        lastActivities = await getActivities(1, 15);
+         lastActivities = await getActivities(1, 15);
         if (activities.length==0) {
             activities = [...lastActivities];
-        }
+        } 
     });
 
     function createMap () {
-        console.log('Creating map...',mainMap,lastActivities,tlat,tlon)
+        //console.log('Creating map...',mainMap,lastActivities,tlat,tlon)
         let n = 0
         let last = lastActivities[n];
         while (!last.start_latlng && n < lastActivities.length) {
@@ -49,7 +52,6 @@
         tlat = coord[0];
         tlon = coord[1];
         MapboxGL.accessToken = "MAPBOX_TOKEN";            
-        console.log('!!!!! New map!')
         mapReady = false;
         map = new MapboxGL.Map({
             container: mainMap,
@@ -90,17 +92,8 @@
 
     async function loadMoreActivities() {
         loading = true;
-        page += 1;
-        const newActivities = await getActivities(page, 100);
-        if (page==1) {
-            activities = [];
-        }
-        if (newActivities) {
-            activities = [...activities, ...newActivities];
-        } else {
-            console.log("No new activities?");
-        }
-        loading = false;
+        await $activityFetcher.fetchMore();
+        loading = false;        
         try {
             last = new Date(activities[0].start_date).toLocaleDateString();
             first = new Date(activities[activities.length - 1].start_date).toLocaleDateString()  
@@ -114,6 +107,30 @@
     let metersWithin = 500;
     let page = 0;
     let activities = [];
+    $: {
+        activities = $activityFetcher.activities();
+    }
+    let fetching;
+    let complete;
+    $: {
+        if (activities.length == 0 && !fetching && !complete) {
+            console.log('Reactive not fetching not complete....');
+            fetching = true;
+            console.log('Fetch more!');
+            $activityFetcher.fetchMore().then(
+                (done)=>{
+                    console.log('Fetched - done? ',done)
+                    complete = done;
+                    fetching = false;
+                    activities = $activityFetcher.activities()
+                    console.log('Activities=>',activities)
+                }
+            ).catch((err)=>{
+                console.log('Error fetching: ',err);
+                fetching = false;
+            });            
+        }
+    }
     let layers = {}
     let hits = [];
     let sources = [];
@@ -137,7 +154,6 @@
                         coords = Polyline.decode(activity.map.summary_polyline);
                         activity.coordinates = coords;
                     } else {
-                        console.log('Use coordinates!');
                         coords = activity.coordinates;
                     }
                     for (let n=1; n<coords.length; n++) {

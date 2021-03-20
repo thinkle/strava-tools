@@ -1,8 +1,34 @@
 import {token, authenticated } from './stores';
 import { get } from 'svelte/store';
 
+export interface Athlete {
+    id : string,
+    bikes : [{id:any,name:string,primary:boolean}],
+    firstname : string,
+    lastname: string
+}
+export interface Activity {
+    average_speed: number,
+    average_temp: number,
+    commute: boolean,
+    elapsed_time: number,
+    start_latlng : [number, number],
+    end_latlng : [number, number],
+    external_id : string,
+    gear_id : string,
+    id : number,
+    map : {
+        summary_polyline
+    },
+    moving_time: number,
+    start_date : string,
+    start_date_local : string,
+    suffer_score : number,
+    type : string,
+    upload_id : number,
+}
 
-export async function checkAuthentication () {
+export async function checkAuthentication () : Promise<boolean> {
     let $token = get(token);
     if ($token) {
         if ($token.expires_at < new Date().getTime() / 1000) {
@@ -49,10 +75,21 @@ export async function refreshToken() {
 }
 
 
-export async function getActivities (page=1, per_page=60) {
+export async function getActivities (
+    page=1, 
+    per_page=60,
+    before=0,
+    after=0): Promise<Activity[]> {
     await checkAuthentication()
+    let query = `https://www.strava.com/api/v3/activities?page=${page}&per_page=${per_page}`;
+    if (before) {
+        query = query + `&before=${before}`
+    }
+    if (after) {
+        query = query + `&after=${after}`
+    }
     let response = await fetch(
-        `https://www.strava.com/api/v3/activities?page=${page}&per_page=${per_page}`,
+        query,
         {
             headers: {
                 Authorization: "Bearer " + get(token).access_token,
@@ -64,7 +101,7 @@ export async function getActivities (page=1, per_page=60) {
     return activities
 }
 
-export async function getAthlete () {
+export async function getAthlete () : Promise<Athlete> {
     await checkAuthentication()
     let response = await fetch(
         //$ http GET "https://www.strava.com/api/v3/athlete" "Authorization: Bearer [[token]]"

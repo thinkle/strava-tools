@@ -3,6 +3,7 @@
   import ColorPicker from './ColorPicker.svelte';
   import Activity from './Activity.svelte';
   import { getActivities, getAthlete } from "./strava";
+  import { startDate, endDate, activityFetcher } from './activityStore';
   import {onMount} from 'svelte';
   let colorUpdate = 0;
 
@@ -20,17 +21,18 @@
   onMount(async ()=>{
      athlete = await getAthlete()
   });
-  let endDate = new Date()
-  let end = endDate.toISOString().slice(0,16);
-  let startDate = new Date(endDate.getFullYear(),endDate.getMonth(),1,0)
-  let start = startDate.toISOString().slice(0,16);
+  $endDate = new Date()
+  let end = $endDate.toISOString().slice(0,16);
+  $startDate = new Date($endDate.getFullYear(),$endDate.getMonth(),1,0)
+  let start = $startDate.toISOString().slice(0,16);
 
-  $: startDate = new Date(start) // react to string changes
-  $: endDate = new Date(end) // react to string changes
+  $: $startDate = new Date(start) // react to string changes
+  $: $endDate = new Date(end) // react to string changes
 
   let totalTime
   let activities = [];
-  let allActivities = [];
+  //let allActivities = [];
+  $: activities = $activityFetcher.activities();
   let indoorTypes = new Set(['VirtualRide','VirtualRun','Yoga','Workout','WeightTraining']);
   let activityTypes = [];
   let activityGears = [];
@@ -70,15 +72,26 @@
       }
       let firstDate = new Date(first);
       let lastDate = new Date(last);
-      if (firstDate > startDate) {
+      if (firstDate > $startDate) {
         console.log('We need more activities!');
-        getActivitiesUntil(startDate,true);
+        getActivitiesUntil($startDate,true);
       }
     }
   }
 
-  $: getActivitiesUntil(startDate);
-  $: activities = allActivities.filter(
+
+  $: {
+    if (!fetching && !$activityFetcher.getFetcher().complete) {
+      async function update () {
+        fetching = true;
+        await $activityFetcher.fetchMore()
+        fetching = false;
+      }
+      update();
+    }
+  }
+  //$: getActivitiesUntil(startDate);
+  /*$: activities = allActivities.filter(
     (a)=>{
       if (!a.start_date_local) {return false}
       let d = new Date(a.start_date_local)
@@ -88,7 +101,7 @@
         return false;
       }
     }
-  )
+  ) */
   $: {
     byTypeMap = {};
     byGearMap = {};
