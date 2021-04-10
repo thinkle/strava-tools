@@ -1,68 +1,76 @@
 <script>
-  export let athlete; // for bikes
-  export let colorId;
-  import { getBike } from "./bikePicker";
-  import { getColorForGear, getColors, setCustomColor } from "./colors";
-  export let setColorCallback = (id, newColor, oldColor) => {};
-  let color = "";
-  $: color = getColorForGear(colorId);
+  export let color = ""; // for bikes
+  export let setColorCallback;
+  let show = false;
+  export let name;
+  import { getColors } from "./colors";
+
+  let gridSize = Math.ceil(Math.sqrt(getColors().length));
+  let width = "300px";
+  let height = 100 + gridSize * 40 + "px";
+
   let oldColor;
-  function showColorPicker(id) {
-    oldColor = color;
-    colorPickerFor = id;
-  }
+
   function hideColorPicker() {
     color = oldColor;
-    setGearColor(oldColor);
-    colorPickerFor = null;
+    setColorCallback(oldColor);
+    show = false;
   }
-  let colorPickerFor;
 
-  function setGearColor(newColor) {
-    setCustomColor(colorPickerFor, newColor);
-    if (setColorCallback) {
-      setColorCallback(colorPickerFor, newColor, oldColor);
-    }
+  function setColor(newColor) {
+    setColorCallback(newColor);
     color = newColor;
-    colorId = colorId;
   }
 
   function topLevel(node) {
     document.body.appendChild(node);
   }
-
-  let inputRef;
-  $: {
-    if (inputRef) {
-      // delay so it has time to be put in the right
-      // spot before we trigger the popup
-      setTimeout(() => inputRef.click(), 100);
-    }
-  }
 </script>
 
-{#if colorPickerFor}
-  <div class="modal" use:topLevel>
-    <span>Change Color for {colorPickerFor}:</span>
-    <input
-      bind:this={inputRef}
-      type="color"
-      value={getColorForGear(colorPickerFor)}
-      on:change={(e) => setGearColor(e.target.value)}
-    />
+{#if show}
+  <div class="modal" use:topLevel style={`--width:${width};--height:${height}`}>
+    <slot>
+      <h3>
+        Change Color {#if name} for {name}{/if}
+      </h3>
+    </slot>
+    <div>
+      Custom Color:
+      <input
+        type="color"
+        value={color}
+        on:change={(e) => setColor(e.target.value)}
+      />
+    </div>
+    <div class="colorList">
+      Pick one:
+      <div class="grid" style={`--grid-size:${gridSize}`}>
+        {#each getColors() as color}
+          <button
+            on:click={() => setColor(color)}
+            class="colorChooser"
+            style={`background-color:${color}`}
+          />
+        {/each}
+      </div>
+    </div>
     <div class="buttons">
       <button on:click={hideColorPicker}>Cancel</button>
-      <button on:click={() => colorPickerFor = null}> Done </button>
-
+      <button on:click={() => (show = null)}> Done </button>
     </div>
   </div>
 {/if}
+
 <span
   style={`color:${color};--color:${color}`}
-  on:click={showColorPicker(colorId)}
+  on:click={() => {
+    console.log("Show!");
+    show = true;
+  }}
 >
-  <slot />
-  {(athlete && getBike(colorId, athlete)?.name) || colorId}
+  <slot
+    >Choose Color {#if name}for {name}{/if}</slot
+  >
 </span>
 
 <style>
@@ -79,17 +87,18 @@
     border-radius: 5px;
   }
   .modal {
-    width: 300px;
-    height: 250px;
+    width: var(--width);
+    height: var(--height);
     position: fixed;
     background-color: white;
-    top: calc(50vh - 200px);
-    left: calc(50vw - 200px);
+    top: calc(50vh - var(--height) / 2);
+    left: calc(50vw - var(--width) / 2);
     border: 2px solid #777;
     border-radius: 10px;
     padding: 15px;
     display: flex;
     flex-direction: column;
+    z-index: 2;
   }
   .modal .buttons {
     margin-top: auto;
@@ -101,5 +110,18 @@
     padding: 2px;
     width: 32px;
     height: 32px;
+  }
+  .colorList button {
+    width: 32px;
+    height: 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 32px);
+    grid-template-rows: repeat(var(--grid-size), 32px);
+    grid-column-gap: 8px;
+    grid-row-gap: 8px;
+    margin: auto;
+    width: calc(40px * var(--grid-size));
   }
 </style>

@@ -1,7 +1,7 @@
 <script type="typescript">
   import DatePicker from "./DatePicker.svelte";
   import TimeRow from "./TimeRow.svelte";
-  import ColorPicker from "./ColorPicker.svelte";
+  import ColorPicker from "./GearColorPicker.svelte";
   import Activity from "./Activity.svelte";
   import { getActivities, getAthlete } from "./strava";
   import { activityFetcher } from "./activityStore";
