@@ -356,8 +356,15 @@
         <div style="margin-left: auto">
           <DatePicker autoUpdate="false" />
           <button
-            on:click={() => {
-              $activityFetcher.fetchAll();
+            on:click={async () => {
+              loading = true;
+              try {
+                await $activityFetcher.fetchAll();
+              } catch (err) {
+                loading = false;
+                throw err;
+              }
+              loading = false;
             }}>Fetch all</button
           >
         </div>
@@ -427,7 +434,7 @@
   }
   nav {
     display: flex;
-    background-color: #fff7;
+    background-color: #fffc;
     align-items: center;
     margin: auto;
     max-width: 1200px;
@@ -443,8 +450,8 @@
   }
 
   .main {
-    width: 90%;
-    height: 90vh;
+    width: 100%;
+    height: calc(100vh - 67px);
     margin: auto;
   }
   .mapwrap {
