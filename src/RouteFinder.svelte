@@ -36,13 +36,39 @@
       return activity.id;
     }
   }
-
   onMount(async () => {
-    lastActivities = await getActivities(1, 15);
     if (activities.length == 0) {
+      lastActivities = await getActivities(1, 15);
       activities = [...lastActivities];
     }
+    let interval = setInterval(() => {
+      console.log("Check search", geocoder.lastSelected);
+      if (geocoder.lastSelected) {
+        let info = JSON.parse(geocoder.lastSelected);
+        console.log("search moved!");
+        tlat = info.center[1];
+        tlon = info.center[0];
+        console.log("info", info);
+        console.log(tlat, tlon);
+        let coord = [tlat, tlon];
+        marker.setLngLat([coord[1], coord[0]]);
+        console.log("Moved to", coord, "based on", info);
+        geocoder.lastSelected = "";
+      }
+    }, 1500);
+    return () => {
+      clearInterval(interval);
+    };
   });
+  let geocoder = {
+    lastSelected: "",
+    mapMarker: {
+      _lngLat: {
+        lng: -1,
+        lat: -1,
+      },
+    },
+  };
 
   function createMap() {
     //console.log('Creating map...',mainMap,lastActivities,tlat,tlon)
@@ -63,13 +89,19 @@
       center: [coord[1], coord[0]],
       zoom: 10,
     });
+    geocoder = new MapboxGeocoder({
+      accessToken: MapboxGL.accessToken,
+      mapboxgl: MapboxGL,
+      marker: false,
+    });
+    map.addControl(geocoder);
+    map.addControl(new MapboxGL.NavigationControl());
     marker = new MapboxGL.Marker({
       color: "#FFFFFF",
       draggable: true,
     })
       .setLngLat([coord[1], coord[0]])
       .addTo(map);
-
     marker.on("dragend", (e) => {
       let location = marker.getLngLat();
       tlon = location.lng;
@@ -266,7 +298,6 @@
   let gearOrTypeToShowList = {}; // gear ID or activity type to filter out of list...
 
   function setColorCallback(colorPickerFor, color, oldColor) {
-    //debugger;
     setCustomColor(colorPickerFor, color);
     activities.map((activity) => {
       if (
@@ -286,6 +317,9 @@
   }
 
   $: console.log("gearOrTypeToShowList: ", gearOrTypeToShowList);
+
+  let searchText = "";
+  function searchMap() {}
 </script>
 
 <svelte:head>
@@ -373,7 +407,7 @@
   </div>
 
   <div class="mapwrap">
-    <div class="overlay">
+    <!-- <div class="overlay">
       <button on:click={() => map.setZoom(map.getZoom() + 1)}>+</button>
       <button on:click={() => map.setZoom(map.getZoom() - 1)}>-</button>
       {#if start && start[0] == tlat && start[1] == tlon}
@@ -382,7 +416,7 @@
         Searching within {metersWithin} meters of
         <span>{tlat.toFixed(4)},{tlon.toFixed(4)}</span>
       {/if}
-    </div>
+    </div> -->
     <div class="main" bind:this={mainMap} />
   </div>
 </div>
@@ -486,9 +520,13 @@
     margin-top: 0;
     margin-left: 3px;
   }
-  .overlay button {
+  .overlay > button {
     border-radius: 50%;
     width: 2em;
     height: 2em;
+  }
+  .searchbox {
+    display: flex;
+    flex-direction: row;
   }
 </style>
