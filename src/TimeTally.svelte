@@ -26,7 +26,9 @@
   let totalTime;
   let activities = [];
   //let allActivities = [];
-  $: activities = $activityFetcher.activities();
+  $: if ($activityFetcher) {
+    activities = $activityFetcher.activities();
+  }
   let indoorTypes = new Set([
     "VirtualRide",
     "VirtualRun",
@@ -47,7 +49,11 @@
   }
 
   $: {
-    if (!fetching && !$activityFetcher.getFetcher().complete) {
+    if (
+      $activityFetcher &&
+      !fetching &&
+      !$activityFetcher.getFetcher().complete
+    ) {
       async function update() {
         fetching = true;
         await $activityFetcher.fetchMore();
