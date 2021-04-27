@@ -10,6 +10,7 @@
   import { closestBetween } from "./geometry.js";
   import { getColorForGear, getColors, setCustomColor } from "./colors";
   import { startDate, endDate, activityFetcher } from "./activityStore";
+  import { fly, fade } from "svelte/transition";
   $startDate = 0;
   $endDate = 0;
   let dateMode = false;
@@ -318,8 +319,7 @@
 
   $: console.log("gearOrTypeToShowList: ", gearOrTypeToShowList);
 
-  let searchText = "";
-  function searchMap() {}
+  let showGearMode;
 </script>
 
 <svelte:head>
@@ -331,65 +331,59 @@
 <div>
   <div class="navcontainer">
     <nav>
-      <h3>Find Routes by Location</h3>
       <div>
-        Search for activities within: <input
+        Find activities within <input
           type="number"
+          style="width:5em; border-bottom: 1px solid grey;text-align:center;font-weight:bold;"
           bind:value={metersWithin}
-        /> meters
+        /> meters of point on map.
       </div>
       <div>
         {#if hits.length}
           <a href="#results">{hits.length} hits</a>
         {/if}
       </div>
-      <div class="searchingInfo">
-        Searching {activities.length} activities
-        {#if first}from {first} to {last}{/if}
-      </div>
-      <input type="checkbox" bind:checked={dateMode} />Advanced
-      <div>
-        {#if $activityFetcher.getFetcher().complete}
-          Got 'em all!
-        {:else}
-          <button
-            disabled={loading}
-            on:click={() => loadMoreActivities()}
-            class:highlight={activities.length == 0}
-          >
-            Load{#if loading}
-              ing…&nbsp;
-            {:else}
-              &nbsp;{#if activities.length}more{:else}activities{/if}
-            {/if}
-          </button>
-        {/if}
-      </div>
-    </nav>
-    <nav>
-      <div style="margin:auto;">
-        <!-- Let's pick ride types... -->
-        {#each Object.keys(gearOrTypeToShowList) as gearColorId}
-          <span
-            style="display:inline-flex; margin-right: 1em; align-items: center"
-          >
-            <GearColorPicker
-              colorId={gearColorId}
-              {athlete}
-              onSetGearColor={setColorCallback}
-            />
-            <input
-              type="checkbox"
-              bind:checked={gearOrTypeToShowList[gearColorId]}
-            />
-          </span>
-          <span />
-        {/each}
+      <label>
+        <input type="checkbox" bind:checked={showGearMode} />
+        by type
+      </label>
+
+      <div class="searchingInfo right">
+        <span
+          >Searching {activities.length} activities
+          {#if first}from {first} to {last}{/if}</span
+        >
+        <label>
+          <input type="checkbox" bind:checked={dateMode} />Advanced
+        </label>
+        <div class="right">
+          {#if $activityFetcher.getFetcher().complete}
+            Got 'em all!
+          {:else}
+            <button
+              disabled={loading}
+              on:click={() => loadMoreActivities()}
+              class:highlight={activities.length == 0}
+            >
+              Load{#if loading}
+                ing…&nbsp;
+              {:else}
+                &nbsp;{#if activities.length}more{:else}activities{/if}
+              {/if}
+            </button>
+          {/if}
+        </div>
       </div>
       {#if dateMode}
-        <div style="margin-left: auto">
-          <DatePicker autoUpdate="false" />
+        <div
+          in:fly={{ y: -32 }}
+          out:fade
+          class="full-row"
+          style="align-content: end;"
+        >
+          <span class="right"><DatePicker autoUpdate="false" /></span>
           <button
+            class="right"
             on:click={async () => {
               loading = true;
               try {
@@ -401,6 +395,26 @@
               loading = false;
             }}>Fetch all</button
           >
+        </div>
+      {/if}
+      {#if showGearMode}
+        <div in:fly={{ y: -32 }} out:fade class="full-row" style="margin:auto;">
+          <!-- Let's pick ride types... -->
+          {#each Object.keys(gearOrTypeToShowList) as gearColorId}
+            <span
+              style="display:inline-flex; margin-right: 1em; align-items: center"
+            >
+              <GearColorPicker
+                colorId={gearColorId}
+                {athlete}
+                onSetGearColor={setColorCallback}
+              />
+              <input
+                type="checkbox"
+                bind:checked={gearOrTypeToShowList[gearColorId]}
+              />
+            </span>
+          {/each}
         </div>
       {/if}
     </nav>
@@ -464,7 +478,7 @@
   .navcontainer {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 3;
   }
   nav {
     display: flex;
@@ -472,12 +486,16 @@
     align-items: center;
     margin: auto;
     max-width: 1200px;
-  }
-  nav :nth-child(2) {
-    margin-left: auto;
+    flex-wrap: wrap;
   }
   nav div {
     margin-left: 1em;
+  }
+  .right {
+    margin-left: auto;
+  }
+  .left {
+    margin-right: auto;
   }
   nav div:nth-child(1) {
     margin-left: 0;
@@ -504,29 +522,26 @@
     margin: auto;
   }
   .searchingInfo {
-    font-size: x-small;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
   input {
     padding: 0;
   }
-  .colorChooser {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    max-width: 200px;
-  }
-  .colorChooser * {
-    margin-bottom: 0;
-    margin-top: 0;
-    margin-left: 3px;
-  }
-  .overlay > button {
-    border-radius: 50%;
-    width: 2em;
-    height: 2em;
-  }
-  .searchbox {
+  .full-row {
+    width: 100%;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+  }
+  nav,
+  nav div {
+    align-content: center;
+  }
+
+  nav div > * {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
   }
 </style>
