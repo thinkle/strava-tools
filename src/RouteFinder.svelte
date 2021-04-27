@@ -509,9 +509,6 @@
   .right {
     margin-left: auto;
   }
-  .left {
-    margin-right: auto;
-  }
   nav div:nth-child(1) {
     margin-left: 0;
   }
