@@ -36,8 +36,6 @@
     text-align: center;
     align-items: center;
   }
-  input[type="date"] {
-  }
   input {
     opacity: 1;
     transition: opacity 300ms;
