@@ -5,82 +5,98 @@
   export let showCheck = true;
   export let checkContent = "";
   export let onChange;
-  export let colorUpdate;
-  export let highlightActivity = (a)=>{console.log('highlight ',a)};  
-  import {getColorForGear} from './colors'
+  export let highlightActivity = (a, event) => {
+    console.log("highlight ", a, event);
+  };
+  import { getColorForGear } from "./colors";
 
-let totalTime = 0;
-let totalDistance = 0;
-let formattedDistance = ''
-$: formattedDistance = totalDistance > 10000 && `${(totalDistance/1000).toFixed(1)}km` || `${Math.round(totalDistance)} meters`
-let first='';
-let last='';
-$: {
-  totalTime = 0;  
-  totalDistance = 0;
-  first = '';
-  last = '';
-  for (let a of activities) {
-    if (a.elapsed_time) {
-      totalTime += a.elapsed_time;
-    }
-    if (!first || a.start_date_local < first) {
-      first = a.start_date_local;
-    }
-    if (!last || a.start_date_local > last) {
-      last = a.start_date_local;
-    }
-    if (a.distance) {
-      totalDistance += a.distance;
+  let totalTime = 0;
+  let totalDistance = 0;
+  let formattedDistance = "";
+  $: formattedDistance =
+    (totalDistance > 10000 && `${(totalDistance / 1000).toFixed(1)}km`) ||
+    `${Math.round(totalDistance)} meters`;
+  let first = "";
+  let last = "";
+  $: {
+    totalTime = 0;
+    totalDistance = 0;
+    first = "";
+    last = "";
+    for (let a of activities) {
+      if (a.elapsed_time) {
+        totalTime += a.elapsed_time;
+      }
+      if (!first || a.start_date_local < first) {
+        first = a.start_date_local;
+      }
+      if (!last || a.start_date_local > last) {
+        last = a.start_date_local;
+      }
+      if (a.distance) {
+        totalDistance += a.distance;
+      }
     }
   }
-}
 
-$: firstDate = new Date(first);
-$: lastDate = new Date(last);
+  $: firstDate = new Date(first);
+  $: lastDate = new Date(last);
 
-function displayTime (seconds) {
-  let hours = Math.floor(seconds / (60*60));
-  if (hours) {seconds = seconds - (hours*60*60)}
-  let minutes = Math.floor(seconds/60);
-  if (minutes) {seconds = seconds - (minutes*60)}
-  return `${(hours).toString().padStart(2,'0')}:${(minutes).toString().padStart(2,'0')}:${(seconds).toString().padStart(2,'0')}`
-}
-let sorted = []
-let x;
-let y;
-$: {
-  sorted = activities.sort((a,b)=>a.start_date_local>b.start_date_local&&1||-1)
-   x = 0;
-   y = 400;
-}
-let width;
-$: width = 0.7 * 1000/activities.length;
-function getX (activity) {
-  let hours = (lastDate.getTime() - firstDate.getTime()) / (60*60*1000)
-  let fromStart = (new Date(activity.start_date_local).getTime() - firstDate.getTime()) / (60*60*1000);
-  let percentage = fromStart/hours; 
-  return (percentage * 1000) - (width/2)
-}
+  function displayTime(seconds) {
+    let hours = Math.floor(seconds / (60 * 60));
+    if (hours) {
+      seconds = seconds - hours * 60 * 60;
+    }
+    let minutes = Math.floor(seconds / 60);
+    if (minutes) {
+      seconds = seconds - minutes * 60;
+    }
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+  let sorted = [];
+  let x;
+  let y;
+  $: {
+    sorted = activities.sort(
+      (a, b) => (a.start_date_local > b.start_date_local && 1) || -1
+    );
+    x = 0;
+    y = 400;
+  }
+  let width;
+  $: width = (0.7 * 1000) / activities.length;
+  function getX(activity) {
+    let hours = (lastDate.getTime() - firstDate.getTime()) / (60 * 60 * 1000);
+    let fromStart =
+      (new Date(activity.start_date_local).getTime() - firstDate.getTime()) /
+      (60 * 60 * 1000);
+    let percentage = fromStart / hours;
+    return percentage * 1000 - width / 2;
+  }
 
-function getY (activity) {
-  return 0;
-}
-let hoverMode=true;
+  function getY(activity) {
+    return 0;
+  }
+  let hoverMode = true;
 </script>
+
 <tr>
   <td colspan="5">
     <svg viewBox="0 0 1000 600" preserveAspectRatio="none">
       {#each sorted as activity}
-        <rect 
-          x={getX(activity)} 
-          y={600-activity.elapsed_time/60}           
-          fill={getColorForGear(activity.gear_id||activity.type,colorUpdate)}
-          date={activity.start_date_local} title={activity.title}
-          height={activity.elapsed_time/60} width={width}
-          on:mouseenter={(e)=>highlightActivity(activity,e)}
-          on:mouseleave={(e)=>hoverMode && highlightActivity(null,e)}
-          on:click={(e)=>highlightActivity(activity,e)}
+        <rect
+          x={getX(activity)}
+          y={600 - activity.elapsed_time / 60}
+          fill={getColorForGear(activity.gear_id || activity.type)}
+          date={activity.start_date_local}
+          title={activity.title}
+          height={activity.elapsed_time / 60}
+          {width}
+          on:mouseenter={(e) => highlightActivity(activity, e)}
+          on:mouseleave={(e) => hoverMode && highlightActivity(null, e)}
+          on:click={(e) => highlightActivity(activity, e)}
         />
       {/each}
     </svg>
@@ -92,7 +108,6 @@ let hoverMode=true;
         type="checkbox"
         checked={!indoorTypes.has(activityType)}
         on:click={(e) => {
-          console.log("Check click", activityType, e.target.checked);
           if (e.target.checked) {
             indoorTypes.delete(activityType);
           } else {
@@ -107,9 +122,9 @@ let hoverMode=true;
       {checkContent}
     {/if}
   </th>
-  <th class="left"
-    style="{`color:${getColorForGear(activityType)}`}"
-  ><slot>{activityType}</slot></th>
+  <th class="left" style={`color:${getColorForGear(activityType)}`}
+    ><slot>{activityType}</slot></th
+  >
   <td class="left">
     <b>{displayTime(totalTime)}</b>
   </td>
@@ -120,15 +135,14 @@ let hoverMode=true;
   <td>
     From {firstDate.toLocaleDateString()}&ndash;{lastDate.toLocaleDateString()}
   </td>
-  
 </tr>
-
 
 <style>
   b {
     font-weight: bold;
   }
-  b,th {
+  b,
+  th {
     font-size: 160%;
   }
   .left {
@@ -139,7 +153,7 @@ let hoverMode=true;
     height: 100px;
   }
   rect:hover {
-    fill : red
+    fill: red;
   }
   @media (max-width: 500px) {
     tr {
