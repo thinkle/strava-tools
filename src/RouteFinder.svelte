@@ -18,7 +18,7 @@
   async function load() {
     athlete = await getAthlete();
   }
-  load();
+
   let mainMap;
   let tlon;
   let tlat;
@@ -38,15 +38,20 @@
     }
   }
   onMount(async () => {
+    await load();
+
     if (activities.length == 0) {
       lastActivities = await getActivities(1, 15);
       activities = [...lastActivities];
+    } else {
+      lastActivities = activities;
     }
+    /* The below is lame, but I can't figure out how to get a callback
+    working on the geocoder object, so I'm just watching the object 
+    for a change and responding... */
     let interval = setInterval(() => {
-      console.log("Check search", geocoder.lastSelected);
       if (geocoder.lastSelected) {
         let info = JSON.parse(geocoder.lastSelected);
-        console.log("search moved!");
         tlat = info.center[1];
         tlon = info.center[0];
         console.log("info", info);
@@ -56,7 +61,7 @@
         console.log("Moved to", coord, "based on", info);
         geocoder.lastSelected = "";
       }
-    }, 1500);
+    }, 300);
     return () => {
       clearInterval(interval);
     };
@@ -98,7 +103,7 @@
     map.addControl(geocoder);
     map.addControl(new MapboxGL.NavigationControl());
     marker = new MapboxGL.Marker({
-      color: "#FFFFFF",
+      color: "#ff3e00",
       draggable: true,
     })
       .setLngLat([coord[1], coord[0]])
@@ -120,9 +125,17 @@
     }
   }
 
+  let markerUnmoved;
   $: {
-    if (!start) {
+    if (!start && tlat && tlon) {
       start = [tlat, tlon];
+      markerUnmoved = true;
+    }
+  }
+
+  $: {
+    if (start && tlat && (start[0] != tlat || start[1] != tlon)) {
+      markerUnmoved = false;
     }
   }
 
@@ -349,7 +362,7 @@
       </label>
 
       <div class="searchingInfo right">
-        <span
+        <span style="font-size: small"
           >Searching {activities.length} activities
           {#if first}from {first} to {last}{/if}</span
         >
@@ -363,7 +376,7 @@
             <button
               disabled={loading}
               on:click={() => loadMoreActivities()}
-              class:highlight={activities.length == 0}
+              class:highlight={!dateMode && !loading}
             >
               Load{#if loading}
                 ing…&nbsp;
@@ -384,6 +397,7 @@
           <span class="right"><DatePicker autoUpdate="false" /></span>
           <button
             class="right"
+            class:highlight={!loading}
             on:click={async () => {
               loading = true;
               try {
@@ -421,16 +435,17 @@
   </div>
 
   <div class="mapwrap">
-    <!-- <div class="overlay">
-      <button on:click={() => map.setZoom(map.getZoom() + 1)}>+</button>
-      <button on:click={() => map.setZoom(map.getZoom() - 1)}>-</button>
-      {#if start && start[0] == tlat && start[1] == tlon}
-        Drag marker around the map to search for activities
-      {:else}
-        Searching within {metersWithin} meters of
-        <span>{tlat.toFixed(4)},{tlon.toFixed(4)}</span>
-      {/if}
-    </div> -->
+    {#if markerUnmoved}
+      <div class="overlay" in:fade out:fade>
+        <div style="font-size: small">
+          Searching within <b>{metersWithin}</b> meters of
+          <span>{tlat.toFixed(4)},{tlon.toFixed(4)}</span>
+        </div>
+        <div style="font-size: x-large">
+          Drag marker around to change the search, or search for a location.
+        </div>
+      </div>
+    {/if}
     <div class="main" bind:this={mainMap} />
   </div>
 </div>
@@ -511,12 +526,13 @@
   }
   .overlay {
     z-index: 2;
-    background-color: #fff7;
+    background-color: #fffa;
     padding: 2em;
-    max-width: 10em;
     position: absolute;
-    top: 5px;
-    right: 5px;
+    width: 100%;
+    top: 25px;
+    left: 0px;
+    pointer-events: none;
   }
   table {
     margin: auto;
@@ -538,6 +554,7 @@
   nav,
   nav div {
     align-content: center;
+    align-items: center;
   }
 
   nav div > * {
