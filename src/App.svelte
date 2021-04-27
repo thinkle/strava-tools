@@ -81,7 +81,7 @@
           &mdash; I'm not a runner!).
         </p>
       {/if}
-      <p><a href="#" on:click={() => (faq = true)}>FAQ</a></p>
+      <p><a href="#faq" on:click={() => (faq = true)}>FAQ</a></p>
       <button
         on:click={() => {
           showInfo = false;
@@ -96,7 +96,7 @@
     }}
   />
   {#if faq}
-    <div class="modalBackground" on:click={() => (faq = false)}>
+    <div id="faq" class="modalBackground" on:click={() => (faq = false)}>
       <div class="modal" on:click={(e) => e.stopPropagation()}>
         <button
           style="position: fixed; top: 5px; right: 5px;"
