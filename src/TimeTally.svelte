@@ -6,7 +6,6 @@
   import { getActivities, getAthlete } from "./strava";
   import { activityFetcher } from "./activityStore";
   import { onMount } from "svelte";
-  let colorUpdate = 0;
 
   function getGearName(gear_id, athlete) {
     if (athlete && athlete.bikes) {
@@ -161,13 +160,11 @@
       activityType="Outdoor"
       activities={activities.filter((a) => !indoorTypes.has(a.type))}
       showCheck={false}
-      {colorUpdate}
       {highlightActivity}
     />
     <TimeRow
       activityType="All Activities"
       {activities}
-      {colorUpdate}
       showCheck={false}
       {highlightActivity}
     />
@@ -179,18 +176,13 @@
     {#if showByType}
       {#each activityTypes as activityType}
         <TimeRow
-          {colorUpdate}
           {activityType}
           activities={activities.filter((a) => a.type == activityType)}
           {indoorTypes}
           onChange={forceRerender}
           {highlightActivity}
         >
-          <ColorPicker
-            {athlete}
-            colorId={activityType}
-            setColorCallback={() => (colorUpdate += 1)}
-          />
+          <ColorPicker {athlete} colorId={activityType} />
         </TimeRow>
       {/each}
     {/if}
@@ -205,15 +197,10 @@
           activityType={getGearName(activityGear, athlete)}
           activities={activities.filter((a) => a.gear_id == activityGear)}
           {indoorTypes}
-          {colorUpdate}
           onChange={forceRerender}
           {highlightActivity}
         >
-          <ColorPicker
-            {athlete}
-            colorId={activityGear}
-            setColorCallback={() => (colorUpdate += 1)}
-          />
+          <ColorPicker {athlete} colorId={activityGear} />
         </TimeRow>
       {/each}
     {/if}
