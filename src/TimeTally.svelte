@@ -1,10 +1,10 @@
 <script type="typescript">
+  import { activityFetcher } from "./activityStore";
+  import { getActivities, getAthlete } from "./strava";
   import DatePicker from "./DatePicker.svelte";
   import TimeRow from "./TimeRow.svelte";
   import ColorPicker from "./GearColorPicker.svelte";
   import Activity from "./Activity.svelte";
-  import { getActivities, getAthlete } from "./strava";
-  import { activityFetcher } from "./activityStore";
   import { onMount } from "svelte";
 
   function getGearName(gear_id, athlete) {
