@@ -1,4 +1,4 @@
-<script type="typescript">
+<script>
   import { activityFetcher } from "./activityStore";
   import { getActivities, getAthlete } from "./strava";
   import DatePicker from "./DatePicker.svelte";
