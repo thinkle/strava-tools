@@ -1,4 +1,4 @@
-<script type="typescript">
+<script>
   import { fade } from "svelte/transition";
   import { getActivities, getAthlete } from "./strava";
   import { startDate, endDate, activityFetcher } from "./activityStore";

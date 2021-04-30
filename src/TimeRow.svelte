@@ -1,7 +1,7 @@
-<script type="typescript">
-  export let activityType: string;
+<script>
+  export let activityType; //: string;
   export let activities;
-  export let indoorTypes: Set<string>;
+  export let indoorTypes; // : Set<string>;
   export let showCheck = true;
   export let checkContent = "";
   export let onChange;
