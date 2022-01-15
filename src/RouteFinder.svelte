@@ -42,6 +42,9 @@
 
     if (activities.length == 0) {
       lastActivities = await getActivities(1, 15);
+      lastActivities.filter((a) => {
+        a.start_latlng && a.start_latlng.length;
+      });
       activities = [...lastActivities];
     } else {
       lastActivities = activities;
@@ -80,11 +83,17 @@
     //console.log('Creating map...',mainMap,lastActivities,tlat,tlon)
     let n = 0;
     let last = lastActivities[n];
-    while (!last.start_latlng && n < lastActivities.length) {
+    while (
+      !(last.start_latlng && last.start_latlng[0]) &&
+      n < lastActivities.length
+    ) {
       n += 1;
       last = lastActivities[n];
     }
-    let coord = last.start_latlng || [0, 0];
+    let coord = last.start_latlng;
+    if (!coord || !coord[0]) {
+      coord = [0, 0];
+    }
     tlat = coord[0];
     tlon = coord[1];
     MapboxGL.accessToken = "MAPBOX_TOKEN";
