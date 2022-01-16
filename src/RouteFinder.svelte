@@ -43,7 +43,7 @@
     if (activities.length == 0) {
       lastActivities = await getActivities(1, 15);
       lastActivities.filter((a) => {
-        a.start_latlng && a.start_latlng.length;
+        a.start_latlng && a.start_latlng.length && !a.trainer;
       });
       activities = [...lastActivities];
     } else {
